@@ -47,7 +47,7 @@ jobs:
         env:
           DEFAULT_BRANCH: main
           FILTER_REGEX_EXCLUDE: dist/**/*
-          CHECKOV_ARGS: --skip-path node_modules
+          CHECKOV_PARAMS: --exclude node_modules/*
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           LINTER_RULES_PATH: .
           VALIDATE_ALL_CODEBASE: true
