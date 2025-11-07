@@ -1,6 +1,9 @@
-name: The name of your action here
-description: Provide a description here
-author: Your name or organization here
+name: Update Tag
+description:
+  This action reads a bump parameter along with other variables and fetches the
+  latest tag, after which it increases the tag's version according with the
+  parameters you pass
+author: Maximiliano Diaz
 
 # Add your action's branding here. This will appear on the GitHub Marketplace.
 branding:
@@ -9,15 +12,45 @@ branding:
 
 # Define your inputs here.
 inputs:
-  milliseconds:
-    description: Your input description here
+  bump:
+    description:
+      The type of bump to apply to the tag. Options can be minor, major, patch,
+      prerelease, none. Defaults to patch
     required: true
-    default: '1000'
+    default: 'none'
+  prefix:
+    description:
+      The prefix to add to add to the tag and to include while searching for tags.
+      Defaults to 'v'. Not required
+    required: false
+    default: 'v'
+  suffix:
+    description:
+      The suffix to add to add to the tag and to include while searching for tags.
+      Defaults to null/empty string. Not required
+    required: false
+    default: ''
+  copy_from:
+    description:
+      Flag that marks whether a target suffix should be provided as the version is changing stage.
+      Eg from v1.2.3-beta to v1.2.3 or from v1.2.0-rc.4 to v1.2.0
+    required: false
+    default: 'false'
+  target_suffix:
+    description:
+      The target suffix to assign to the tag in place of the source one.
+      Eg alpha -> beta or beta -> ''
+    required: false
+    default: ''
+  github_token:
+    description: 'Token to access GitHub.'
+    required: true
 
 # Define your outputs here.
 outputs:
-  time:
-    description: Your output description here
+  updated_tag:
+    description:
+      The update tag version created from the parameters passed
 
 runs:
   using: node24
