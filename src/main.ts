@@ -1,5 +1,15 @@
 import * as core from '@actions/core'
-import { wait } from './wait.js'
+import { listTags } from './utils/list_tags.js'
+import { searchBase, searchPrerelease } from './utils/search_tags.js'
+import {
+  updatePatch,
+  updatePrerelease,
+  updateMinor,
+  updateMajor,
+  updateNone
+} from './utils/update_tags.js'
+import { bumpTypeFromString } from './utils/utils.js'
+import { BumpType, VersionList, VersionTag } from './utils/types.js'
 
 /**
  * The main function for the action.
@@ -8,18 +18,43 @@ import { wait } from './wait.js'
  */
 export async function run(): Promise<void> {
   try {
-    const ms: string = core.getInput('milliseconds')
+    const bump: BumpType = bumpTypeFromString(core.getInput('bump'))
+    const copy_from: boolean = core.getInput('copy_from') === 'true'
+    const tagList: VersionList = {
+      prefix: core.getInput('prefix'),
+      tags: await listTags(),
+      suffix: core.getInput('suffix')
+    }
 
-    // Debug logs are only output if the `ACTIONS_STEP_DEBUG` secret is true
-    core.debug(`Waiting ${ms} milliseconds ...`)
+    let latest_tag: VersionTag
+    let updated_tag: VersionTag
 
-    // Log the current timestamp, wait, then log the new timestamp
-    core.debug(new Date().toTimeString())
-    await wait(parseInt(ms, 10))
-    core.debug(new Date().toTimeString())
+    switch (bump) {
+      case BumpType.PRERELEASE:
+        latest_tag = searchPrerelease(tagList)
+        updated_tag = updatePrerelease(latest_tag)
+        break
+      case BumpType.PATCH:
+        latest_tag = searchBase(tagList)
+        updated_tag = updatePatch(latest_tag)
+        break
+      case BumpType.MINOR:
+        latest_tag = searchBase(tagList)
+        updated_tag = updateMinor(latest_tag)
+        break
+      case BumpType.MAJOR:
+        latest_tag = searchBase(tagList)
+        updated_tag = updateMajor(latest_tag)
+        break
+      case BumpType.NONE:
+      default:
+        latest_tag = searchPrerelease(tagList) /**@caution */
+        updated_tag = copy_from ? updateNone(latest_tag) : latest_tag
+        break
+    }
 
     // Set outputs for other workflow steps to use
-    core.setOutput('time', new Date().toTimeString())
+    core.setOutput('updated_tag', updated_tag.fullTag)
   } catch (error) {
     // Fail the workflow run if an error occurs
     if (error instanceof Error) core.setFailed(error.message)
