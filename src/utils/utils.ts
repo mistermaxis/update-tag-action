@@ -1,17 +1,8 @@
 import * as core from '@actions/core'
-import {
-  BumpType,
-  VersionList,
-  SearchType,
-  VersionNumber,
-  VersionTag
-} from './types.js'
+import { BumpType, SearchType, VersionNumber, VersionTag } from './types.js'
 
-const prefix: string = core.getInput('prefix')
-const version_suffix = core.getInput('suffix')
-
-export function sortVersions(versionList: VersionList) {
-  versionList.tags.sort((a, b) => {
+export function sortVersions(versionList: VersionTag[]): VersionTag[] {
+  versionList.sort((a, b) => {
     if (a.number.major !== b.number.major) {
       return a.number.major - b.number.major
     }
@@ -49,31 +40,31 @@ export function bumpTypeFromString(bump: string): BumpType {
 
 export function versionRegex(searchType: SearchType): RegExp {
   const version_number: string = '\\d{1,3}.\\d{1,3}.\\d{1,3}'
-  const suffix: string = version_suffix ? `-${version_suffix}` : ''
+  const suffix: string = getSuffix() != undefined ? `-${getSuffix()}` : ''
   const prerelease_number: string = '.[0-9]{1,3}'
-  const pattern_prerelease: string = `^${prefix}${version_number}${suffix}${prerelease_number}$`
-  const pattern_suffix: string = `^${prefix}\\d{1,3}.\\d{1,3}.\\d{1,3}${suffix}$`
-  const pattern_base: string = `^${prefix}\\d{1,3}.\\d{1,3}.\\d{1,3}$`
-  const pattern_stripped: string = '\\d{1,3}.\\d{1,3}.\\d{1,3}'
-  const flags: string = 'gm'
+
+  const pattern_prerelease: string = `^${getPrefix()}${version_number}${suffix}${prerelease_number}$`
+  const pattern_suffix: string = `^${getPrefix() ?? ''}${version_number}${suffix}$`
+  const pattern_base: string = `^${getPrefix() ?? ''}${version_number}$`
+  const pattern_stripped: string = `${version_number}`
 
   switch (searchType) {
     case SearchType.WITH_SUFFIX:
-      return new RegExp(pattern_suffix, flags)
+      return new RegExp(pattern_suffix)
     case SearchType.PRERELEASE:
-      return new RegExp(pattern_prerelease, flags)
+      return new RegExp(pattern_prerelease)
     case SearchType.STRIPPED_NUMBER:
       return new RegExp(pattern_stripped)
     case SearchType.NO_SUFFIX:
     default:
-      return new RegExp(pattern_base, flags)
+      return new RegExp(pattern_base)
   }
 }
 
 export function stripVersionNumber(tag: string): string {
   return tag
-    .replace(RegExp(`${prefix}`), '')
-    .replace(RegExp(`-${version_suffix}.*`), '')
+    .replace(RegExp(`${getPrefix()}`), '')
+    .replace(RegExp(`-${getSuffix()}.*`), '')
 }
 
 export function tagToNumber(tag: string): VersionNumber {
@@ -81,7 +72,7 @@ export function tagToNumber(tag: string): VersionNumber {
     versionRegex(SearchType.STRIPPED_NUMBER)
   )
 
-  const prerelease_pattern = RegExp(`-${version_suffix}.\\d{1,3}$`)
+  const prerelease_pattern = RegExp(`-${getSuffix()}.\\d{1,3}$`)
 
   const prerelease_match: RegExpMatchArray | null =
     tag.match(prerelease_pattern)
@@ -90,7 +81,7 @@ export function tagToNumber(tag: string): VersionNumber {
 
   if (prerelease_match) {
     const prerelease: string = prerelease_match?.[0].replace(
-      `-${version_suffix}.`,
+      `-${getSuffix()}.`,
       ''
     )
     prerelease_number = parseInt(prerelease)
@@ -113,8 +104,8 @@ export function tagNameFromNumber(versionNumber: VersionNumber): string {
 
 export function fullTagFromObject(tag: VersionTag): string {
   let version_suffix: string
-  const copy_from: boolean = core.getInput('copy_from') === 'true'
-  const target_suffix: string = core.getInput('target_suffix')
+  const copy_from: boolean = getCopyFrom()
+  const target_suffix: string = getTargetSuffix()
 
   if (copy_from) {
     version_suffix = target_suffix ? `-${target_suffix}` : ''
@@ -126,4 +117,24 @@ export function fullTagFromObject(tag: VersionTag): string {
     ? `.${tag.prerelease_number}`
     : ''
   return `${tag.prefix ?? ''}${tag.tagName}${version_suffix}${copy_from ? '' : prerelease}`
+}
+
+export function getPrefix(): string {
+  return core.getInput('prefix')
+}
+
+export function getSuffix(): string {
+  return core.getInput('suffix')
+}
+
+export function getCopyFrom(): boolean {
+  return core.getInput('copy_from') == 'true' ? true : false
+}
+
+export function getBump(): BumpType {
+  return bumpTypeFromString(core.getInput('bump'))
+}
+
+export function getTargetSuffix(): string {
+  return core.getInput('target_suffix')
 }
