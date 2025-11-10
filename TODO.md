@@ -1,4 +1,4 @@
 # TODO
 
-- [ ] Add tests
-- [ ] Style and format README file
+- [x] Add tests
+- [x] Style and format readme file
