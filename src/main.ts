@@ -8,8 +8,8 @@ import {
   updateMajor,
   updateNone
 } from './utils/update_tags.js'
-import { bumpTypeFromString } from './utils/utils.js'
-import { BumpType, VersionList, VersionTag } from './utils/types.js'
+import { BumpType, VersionTag } from './utils/types.js'
+import { getBump, getCopyFrom, getSuffix } from './utils/utils.js'
 
 /**
  * The main function for the action.
@@ -18,12 +18,16 @@ import { BumpType, VersionList, VersionTag } from './utils/types.js'
  */
 export async function run(): Promise<void> {
   try {
-    const bump: BumpType = bumpTypeFromString(core.getInput('bump'))
-    const copy_from: boolean = core.getInput('copy_from') === 'true'
-    const tagList: VersionList = {
-      prefix: core.getInput('prefix'),
-      tags: await listTags(),
-      suffix: core.getInput('suffix')
+    const bump: BumpType = getBump()
+    const copy_from: boolean = getCopyFrom()
+    const tagList: VersionTag[] = await listTags()
+
+    if (bump === BumpType.PRERELEASE && !getSuffix()) {
+      core.setFailed('Prerelease bumps must be used with a suffix')
+    }
+
+    if (bump !== BumpType.NONE && copy_from === true) {
+      core.setFailed('copy_from:true is meant to be used with bump:none')
     }
 
     let latest_tag: VersionTag
@@ -48,7 +52,7 @@ export async function run(): Promise<void> {
         break
       case BumpType.NONE:
       default:
-        latest_tag = searchPrerelease(tagList) /**@caution */
+        latest_tag = searchPrerelease(tagList)
         updated_tag = copy_from ? updateNone(latest_tag) : latest_tag
         break
     }
