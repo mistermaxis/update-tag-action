@@ -35,15 +35,13 @@
 
 ## Methodology
 
-## Searching for a tag where the bump is prerelease
+## Running the action with bump: prerelease
 
-### bump: prerelease
+- **bump: prerelease**
+- **prefix: v**
+- **suffix: beta**
 
-### prefix: v
-
-### suffix: beta
-
-### Expected result
+**Searching the tag:**
 
 Search for all the prerelease tags with the provided `suffix` (eg:
 `vx.y.z-beta.w`), pick the highest
@@ -56,9 +54,7 @@ pick the highest
 
 If no valid tag is found at all, use the default `v0.0.0`
 
-## Updating a tag where the bump is prerelease
-
-### Expected result
+**Updating the tag:**
 
 If the tag is in the form `vx.y.z-beta.w`, grab the `w` (prerelease) component
 and increase it by one. Construct the tag back with the updated components and
@@ -74,15 +70,13 @@ set the `z` (patch) component to zero and construct the tag again with the
 updated components and add the `suffix` and `1` as prerelease number. Eg:
 `v1.2.3 → v1.3.0-beta.1`
 
-## Searching for a tag where the bump is patch
+## Running the action with bump: patch
 
-### bump: patch
+- **bump: patch**
+- **prefix: v**
+- **suffix: beta | null**
 
-### prefix: v
-
-### suffix: beta | null
-
-### Expected result:
+**Searching the tag:**
 
 Search for all tags with the provided `suffix` (eg: `vx.y.z-beta`), pick the
 highest
@@ -92,9 +86,7 @@ pick the highest
 
 If no valid tag is found at all, use the default `v0.0.0`
 
-## Updating a tag where the bump is patch
-
-### Expected result:
+**Updating the tag:**
 
 If the tag is in the form `vx.y.z-beta`, increase the `z` (patch) component by
 one and construct the tag again with the updated components. Eg:
@@ -104,15 +96,13 @@ If the tag is in the form `vx.y.z`, increase the `z` (patch) component by one,
 and construct the tag again with the updated components and add the `suffix`, if
 any. Eg: `v1.2.3 → v1.2.4` or `v0.3.6 → 0.3.7-beta`
 
-## Searching for a tag where the bump is minor
+## Running the action with bump: minor
 
-### bump: minor
+- **bump: patch**
+- **prefix: v**
+- **suffix: beta | null**
 
-### prefix: v
-
-### suffix: beta | null
-
-### Expected result:
+**Searching the tag:**
 
 Search for all tags with the provided `suffix` (eg: `vx.y.z-beta`), pick the
 highest
@@ -122,9 +112,7 @@ If no valid tag is found, search for all valid tags without any suffix (eg:
 
 If no valid tag is found at all, use the default `v0.0.0`
 
-## Updating a tag where the bump is minor
-
-### Expected result:
+**Updating the tag:**
 
 If the tag is in the form `vx.y.z-beta`, increase the `y` (minor) component by
 one, set the `z` (patch) component to zero and construct the tag again with the
@@ -135,15 +123,13 @@ set the `z` (patch) component to zero and construct the tag again with the
 updated components and add the `suffix`, if any. Eg: `v1.2.3` `→ v1.3.0` or
 `v4.8.3 → v4.9.0-beta`
 
-## Searching for a tag where the bump is major
+## Running the action with bump: major
 
-### bump: major
+- **bump: patch**
+- **prefix: v**
+- **suffix: beta | null**
 
-### prefix: v
-
-### suffix: beta | null
-
-### Expected result:
+**Searching the tag:**
 
 Search for all tags with the provided `suffix` (eg: `vx.y.z-beta`), pick the
 highest
@@ -153,9 +139,7 @@ If no valid tag is found, search for all valid tags without any suffix (eg:
 
 If no valid tag is found at all, use the default `v0.0.0`
 
-## Updating a tag where the bump is major
-
-### Expected result:
+**Updating the tag:**
 
 If the tag is in the form `vx.y.z-beta`, increase the `x` (major) component by
 one, set the `y` (minor) and `z` (patch) components to zero and construct the
@@ -166,17 +150,14 @@ set the `y` (minor) and `z` (patch) components to zero and construct the tag
 again with the updated components and add the `suffix`, if any. Eg: `v1.2.3`
 `→ v2.0.0` or `v1.4.3 → v2.0.0-beta`
 
-## Searching for a tag where the bump is none and copy_from is true
+## Running the action with bump: none, and copy_from: true
 
-### bump: none
+- **bump: none**
+- **prefix: v**
+- **suffix: beta | null**
+- **copy_from: true**
 
-### prefix: v
-
-### suffix: beta
-
-### copy_from: true
-
-### Expected result:
+**Searching the tag:**
 
 Search for all prerelease tags with the provided `suffix` (eg: `vx.y.z-beta.w`),
 pick the highest
@@ -189,9 +170,7 @@ If no valid tag is found, search for all valid tags without any suffix (eg:
 
 If no valid tag is found at all, use the default `v0.0.0`
 
-## Updating a tag where the bump is none and copy_from is true
-
-### Expected result:
+**Updating the tag:**
 
 If the tag is in the form `vx.y.z-beta.w`, Grab the tag and return it, removing
 the prerelease component. Eg: `v1.2.3-beta.3 →` `v1.2.3-beta`
@@ -202,19 +181,15 @@ If the tag is in the form `vx.y.z-beta`, Grab the tag and return it as is. Eg:
 If the tag is in the form `vx.y.z`, Grab the tag and append the `suffix`
 component without modifying the tag. Eg: `v0.4.0 → v0.4.0-beta`
 
-## Searching for a tag where the bump is none, copy_from is true and target_suffix is defined
+## Running the action with bump: none, copy_from: true and target_suffix: beta
 
-### bump: none
+- **bump: none**
+- **prefix: v**
+- **suffix: alpha**
+- **copy_from: true**
+- **target_suffix: beta**
 
-### prefix: v
-
-### suffix: beta
-
-### copy_from: true
-
-### target_suffix: beta
-
-### Expected result:
+**Searching the tag:**
 
 Search for all tags with the provided `suffix` (eg: `vx.y.z-alpha`), pick the
 highest
@@ -224,9 +199,7 @@ If no valid tag is found, search for all valid tags without any suffix (eg:
 
 If no valid tag is found at all, use the default `v0.0.0`
 
-## Updating a tag where the bump is none, copy_from is true and target_suffix is defined
-
-### Expected result:
+**Updating the tag:**
 
 If the tag is in the form `vx.y.z-alpha`, Grab the tag and replace the `suffix`
 with the `target_suffix`. Eg: `v1.2.3-alpha → v1.2.3-beta`
