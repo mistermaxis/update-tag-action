@@ -13,12 +13,6 @@ export enum BumpType {
   MAJOR
 }
 
-export type VersionList = {
-  prefix: string
-  tags: VersionTag[]
-  suffix: string
-}
-
 export type VersionTag = {
   fullTag: string
   prefix?: string

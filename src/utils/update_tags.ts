@@ -2,10 +2,10 @@ import { SearchType, VersionTag } from './types.js'
 import { fullTagFromObject, tagNameFromNumber, versionRegex } from './utils.js'
 
 /**
- * @example
- * updatePrerelease({ fullTag: 'v1.2.3-beta.2' })
- * @returns
- * 'v1.2.3-beta.3'
+ * Returns the tag after updating its prerelease version component
+ * @param {VersionTag} tag - The latest relevant tag found
+ * @example updatePrerelease({ fullTag: 'v1.2.3-beta.2' })
+ * @returns {VersionTag} { fullTag: 'v1.2.3-beta.3' }
  */
 export function updatePrerelease(tag: VersionTag): VersionTag {
   const updated_tag: VersionTag = {
@@ -29,7 +29,7 @@ export function updatePrerelease(tag: VersionTag): VersionTag {
     updated_tag.prerelease_number = '1'
     updated_tag.tagName = tagNameFromNumber(updated_tag.number)
     updated_tag.fullTag = fullTagFromObject(updated_tag)
-  } else {
+  } else if (versionRegex(SearchType.PRERELEASE).test(tag.fullTag)) {
     updated_tag.number = {
       ...tag.number,
       prerelease: tag.number.prerelease ? tag.number.prerelease + 1 : 1
@@ -43,10 +43,10 @@ export function updatePrerelease(tag: VersionTag): VersionTag {
 }
 
 /**
- * @example
- * updatePatch({ fullTag: 'v1.2.3' })
- * @returns
- * 'v1.2.4'
+ * Returns the tag after updating its patch version component
+ * @param {VersionTag} tag - The latest relevant tag found
+ * @example updatePatch({ fullTag: 'v1.2.3' })
+ * @returns {VersionTag} { fullTag: 'v1.2.4' }
  */
 export function updatePatch(tag: VersionTag): VersionTag {
   const updated_tag: VersionTag = {
@@ -64,10 +64,10 @@ export function updatePatch(tag: VersionTag): VersionTag {
 }
 
 /**
- * @example
- * updateMinor({ fullTag: 'v1.2.3' })
- * @returns
- * 'v1.3.0'
+ * Returns the tag after updating the minor version component
+ * @param {VersionTag} tag - The latest relevant tag found
+ * @example updateMinor({ fullTag: 'v1.2.3' })
+ * @returns {VersionTag} { fullTag: 'v1.3.0' }
  */
 export function updateMinor(tag: VersionTag): VersionTag {
   const updated_tag: VersionTag = {
@@ -84,13 +84,11 @@ export function updateMinor(tag: VersionTag): VersionTag {
   return updated_tag
 }
 
-// TODO Create documentation form examples
 /**
+ * Returns the tag after updating the major version component
  * @param {VersionTag} tag - The latest relevant tag found
- * @example
- * updateMajor({ fullTag: 'v1.2.3' })
- * @returns
- * 'v2.0.0'
+ * @example updateMajor({ fullTag: 'v1.2.3' })
+ * @returns {VersionTag} { fullTag: 'v2.0.0' }
  */
 export function updateMajor(tag: VersionTag): VersionTag {
   const updated_tag: VersionTag = {
@@ -107,11 +105,16 @@ export function updateMajor(tag: VersionTag): VersionTag {
   return updated_tag
 }
 
+/**
+ * Returns the tag without the prerelease number
+ * @param {VersionTag} tag - The latest relevant tag found
+ * @example updateNone({ fullTag: 'v1.2.3-beta.1' })
+ * @returns {VersionTag} { fullTag: 'v1.2.3-beta' }
+ */
 export function updateNone(tag: VersionTag): VersionTag {
   const updated_tag: VersionTag = tag
 
   updated_tag.tagName = tagNameFromNumber(updated_tag.number)
   updated_tag.fullTag = fullTagFromObject(updated_tag)
-
   return updated_tag
 }
