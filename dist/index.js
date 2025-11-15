@@ -31570,6 +31570,21 @@ function updateNone(tag) {
     return updated_tag;
 }
 
+function checkForErrors() {
+    const bump = getBump();
+    const suffix = getSuffix();
+    const copy_from = getCopyFrom();
+    if (bump === BumpType.PRERELEASE && !suffix) {
+        throw coreExports.setFailed('Prerelease bumps must be used with a suffix');
+    }
+    if (bump === BumpType.PRERELEASE && copy_from === true) {
+        throw coreExports.setFailed('The flag copy_from:true is not meant to be used with bump:prerelease');
+    }
+    if (suffix && copy_from == true) {
+        coreExports.warning('If there is no tag with the provided suffix, copy_from is unnecessary');
+    }
+}
+
 /**
  * The main function for the action.
  *
@@ -31580,12 +31595,7 @@ async function run() {
         const bump = getBump();
         const copy_from = getCopyFrom();
         const tagList = await listTags();
-        if (bump === BumpType.PRERELEASE && !getSuffix()) {
-            coreExports.setFailed('Prerelease bumps must be used with a suffix');
-        }
-        if (bump !== BumpType.NONE && copy_from === true) {
-            coreExports.setFailed('copy_from:true is meant to be used with bump:none');
-        }
+        checkForErrors();
         let latest_tag;
         let updated_tag;
         switch (bump) {
