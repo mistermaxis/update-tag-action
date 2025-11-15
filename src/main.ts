@@ -9,7 +9,8 @@ import {
   updateNone
 } from './utils/update_tags.js'
 import { BumpType, VersionTag } from './utils/types.js'
-import { getBump, getCopyFrom, getSuffix } from './utils/utils.js'
+import { getBump, getCopyFrom } from './utils/utils.js'
+import { checkForErrors } from './utils/error_check.js'
 
 /**
  * The main function for the action.
@@ -22,13 +23,7 @@ export async function run(): Promise<void> {
     const copy_from: boolean = getCopyFrom()
     const tagList: VersionTag[] = await listTags()
 
-    if (bump === BumpType.PRERELEASE && !getSuffix()) {
-      core.setFailed('Prerelease bumps must be used with a suffix')
-    }
-
-    if (bump !== BumpType.NONE && copy_from === true) {
-      core.setFailed('copy_from:true is meant to be used with bump:none')
-    }
+    checkForErrors()
 
     let latest_tag: VersionTag
     let updated_tag: VersionTag
