@@ -1,6 +1,6 @@
 {
   "name": "typescript-action",
-  "description": "GitHub Actions TypeScript template",
+  "description": "Update Tag GitHub Action",
   "version": "v1.0.0",
   "author": "",
   "type": "module",
