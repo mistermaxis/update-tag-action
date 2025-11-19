@@ -8,11 +8,11 @@ export function checkForErrors() {
   const copy_from = getCopyFrom()
 
   if (bump === BumpType.PRERELEASE && !suffix) {
-    throw core.setFailed('Prerelease bumps must be used with a suffix')
+    throw new Error('Prerelease bumps must be used with a suffix')
   }
 
   if (bump === BumpType.PRERELEASE && copy_from === true) {
-    throw core.setFailed(
+    throw new Error(
       'The flag copy_from:true is not meant to be used with bump:prerelease'
     )
   }
