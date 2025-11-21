@@ -29,10 +29,10 @@ export function updatePrerelease(tag: VersionTag): VersionTag {
     updated_tag.prerelease_number = '1'
     updated_tag.tagName = tagNameFromNumber(updated_tag.number)
     updated_tag.fullTag = fullTagFromObject(updated_tag)
-  } else if (versionRegex(SearchType.PRERELEASE).test(tag.fullTag)) {
+  } else {
     updated_tag.number = {
       ...tag.number,
-      prerelease: tag.number.prerelease ? tag.number.prerelease + 1 : 1
+      prerelease: tag.number.prerelease! + 1
     }
     updated_tag.prerelease_number = updated_tag.number.prerelease?.toString()
     updated_tag.tagName = tagNameFromNumber(updated_tag.number)
