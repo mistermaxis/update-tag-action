@@ -31389,6 +31389,23 @@ function getBump() {
 function getTargetSuffix() {
     return coreExports.getInput('target_suffix');
 }
+function defaultVersion() {
+    const version = {
+        fullTag: `${getPrefix()}0.0.0`,
+        prefix: getPrefix(),
+        suffix: getSuffix(),
+        tagName: '0.0.0',
+        prerelease_number: undefined,
+        target_suffix: getTargetSuffix(),
+        number: {
+            major: 0,
+            minor: 0,
+            patch: 0,
+            prerelease: undefined
+        }
+    };
+    return version;
+}
 
 async function listTags() {
     const githubToken = coreExports.getInput('github_token');
@@ -31420,25 +31437,24 @@ async function listTags() {
  * @returns {VersionTag} { fullTag: 'v2.3.4-beta.3' }
  */
 function searchPrerelease(tagList) {
-    let match_list = [];
-    match_list = tagList.filter((tag) => versionRegex(SearchType.PRERELEASE).test(tag.fullTag));
-    if (match_list.length === 0) {
-        match_list = tagList.filter((tag) => versionRegex(SearchType.WITH_SUFFIX).test(tag.fullTag));
-    }
-    if (match_list.length === 0) {
-        match_list = tagList.filter((tag) => versionRegex(SearchType.NO_SUFFIX).test(tag.fullTag));
-    }
-    const matched_tags = match_list ? sortVersions(match_list) : [];
-    const tag = matched_tags.pop();
-    const latest_tag = {
-        fullTag: tag ? tag.fullTag : `${getPrefix()}0.0.0`,
-        prefix: getPrefix(),
-        tagName: tag ? tag.tagName : '0.0.0',
-        suffix: getSuffix(),
-        prerelease_number: tag?.prerelease_number,
-        number: tag?.number ? tag.number : { major: 0, minor: 0, patch: 0 }
-    };
-    return latest_tag;
+    let prerelease_list = [];
+    let with_suffix_list = [];
+    let no_suffix_list = [];
+    prerelease_list = tagList.filter((tag) => versionRegex(SearchType.PRERELEASE).test(tag.fullTag));
+    with_suffix_list = tagList.filter((tag) => versionRegex(SearchType.WITH_SUFFIX).test(tag.fullTag));
+    no_suffix_list = tagList.filter((tag) => versionRegex(SearchType.NO_SUFFIX).test(tag.fullTag));
+    const matched_prerelease = sortVersions(prerelease_list);
+    const matched_suffix = sortVersions(with_suffix_list);
+    const matched_no_suffix = sortVersions(no_suffix_list);
+    const p = matched_prerelease.pop();
+    const ws = matched_suffix.pop();
+    const ns = matched_no_suffix.pop();
+    const results = [
+        p ?? defaultVersion(),
+        ws ?? defaultVersion(),
+        ns ?? defaultVersion()
+    ];
+    return sortVersions(results)[results.length - 1];
 }
 /**
  * Returns the latest version without prerelease component and the provided suffix, if any
@@ -31454,7 +31470,7 @@ function searchBase(tagList) {
     if (match_list.length === 0) {
         match_list = tagList.filter((tag) => tag.fullTag.match(versionRegex(SearchType.NO_SUFFIX)));
     }
-    const matched_tags = match_list ? sortVersions(match_list) : [];
+    const matched_tags = sortVersions(match_list);
     const tag = matched_tags.pop();
     const latest_tag = {
         fullTag: tag ? tag.fullTag : `${getPrefix()}0.0.0`,
@@ -31492,10 +31508,10 @@ function updatePrerelease(tag) {
         updated_tag.tagName = tagNameFromNumber(updated_tag.number);
         updated_tag.fullTag = fullTagFromObject(updated_tag);
     }
-    else if (versionRegex(SearchType.PRERELEASE).test(tag.fullTag)) {
+    else {
         updated_tag.number = {
             ...tag.number,
-            prerelease: tag.number.prerelease ? tag.number.prerelease + 1 : 1
+            prerelease: tag.number.prerelease + 1
         };
         updated_tag.prerelease_number = updated_tag.number.prerelease?.toString();
         updated_tag.tagName = tagNameFromNumber(updated_tag.number);
