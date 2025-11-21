@@ -77,12 +77,23 @@ describe('Prerelease bump with existing version', () => {
         }
       },
       {
-        fullTag: 'v2.3.4',
+        fullTag: 'v2.3.4-beta',
         prefix: 'v',
         tagName: '2.3.4',
         suffix: 'beta',
         number: {
           major: 2,
+          minor: 3,
+          patch: 4
+        }
+      },
+      {
+        fullTag: 'v3.3.4',
+        prefix: 'v',
+        tagName: '3.3.4',
+        suffix: 'beta',
+        number: {
+          major: 3,
           minor: 3,
           patch: 4
         }
@@ -93,7 +104,7 @@ describe('Prerelease bump with existing version', () => {
     await run()
 
     // Verify the time output was set.
-    expect(core.setOutput).toHaveBeenCalledWith('updated_tag', 'v1.3.0-beta.1')
+    expect(core.setOutput).toHaveBeenCalledWith('updated_tag', 'v3.4.0-beta.1')
   })
 
   it('Should pick the latest existing valid version with the provided suffix and a prerelease number and updated it', async () => {
@@ -133,7 +144,7 @@ describe('Prerelease bump with existing version', () => {
     expect(core.setOutput).toHaveBeenCalledWith('updated_tag', 'v2.3.4-beta.2')
   })
 
-  it('Should pick the latest existing valid version with or without the suffix if there is one', async () => {
+  it('Should pick the latest existing valid version with or without the suffix', async () => {
     const mockVersionTag: VersionTag[] = [
       {
         fullTag: 'v1.2.3-beta.2',
@@ -180,6 +191,16 @@ describe('Prerelease bump with existing version', () => {
     await run()
 
     // Verify the time output was set.
-    expect(core.setOutput).toHaveBeenCalledWith('updated_tag', 'v1.2.3-beta.3')
+    expect(core.setOutput).toHaveBeenCalledWith('updated_tag', 'v2.4.0-beta.1')
+  })
+
+  it('Should pick 0.0.0 and add the prefix, suffix and prerelease number', async () => {
+    const mockVersionTag: VersionTag[] = []
+    listTags.mockImplementation(() => Promise.resolve(mockVersionTag))
+
+    await run()
+
+    // Verify the time output was set.
+    expect(core.setOutput).toHaveBeenCalledWith('updated_tag', 'v0.1.0-beta.1')
   })
 })
