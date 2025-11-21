@@ -33,14 +33,14 @@ describe('Patch bump with existing version', () => {
   it('Should pick the latest existing valid version without a suffix and update its patch version component and add the suffix, if any', async () => {
     const mockVersionTag: VersionTag[] = [
       {
-        fullTag: 'v1.2.3',
+        fullTag: 'v2.3.5',
         prefix: 'v',
-        tagName: '1.2.3',
+        tagName: '2.3.5',
         suffix: '',
         number: {
-          major: 1,
-          minor: 2,
-          patch: 3
+          major: 2,
+          minor: 3,
+          patch: 5
         }
       },
       {
@@ -60,7 +60,7 @@ describe('Patch bump with existing version', () => {
     await run()
 
     // Verify the time output was set.
-    expect(core.setOutput).toHaveBeenCalledWith('updated_tag', 'v2.3.5-beta')
+    expect(core.setOutput).toHaveBeenCalledWith('updated_tag', 'v2.3.6-beta')
   })
 
   it('Should pick the latest existing valid version with the provided suffix and update its patch version component', async () => {
