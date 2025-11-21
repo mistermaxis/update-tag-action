@@ -138,3 +138,21 @@ export function getBump(): BumpType {
 export function getTargetSuffix(): string {
   return core.getInput('target_suffix')
 }
+
+export function defaultVersion(): VersionTag {
+  const version: VersionTag = {
+    fullTag: `${getPrefix()}0.0.0`,
+    prefix: getPrefix(),
+    suffix: getSuffix(),
+    tagName: '0.0.0',
+    prerelease_number: undefined,
+    target_suffix: getTargetSuffix(),
+    number: {
+      major: 0,
+      minor: 0,
+      patch: 0,
+      prerelease: undefined
+    }
+  }
+  return version
+}

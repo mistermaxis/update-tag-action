@@ -1,4 +1,4 @@
-import { getPrefix, getSuffix } from './utils.js'
+import { defaultVersion, getPrefix, getSuffix } from './utils.js'
 import { SearchType, VersionTag } from './types.js'
 import { sortVersions, versionRegex } from './utils.js'
 
@@ -9,38 +9,39 @@ import { sortVersions, versionRegex } from './utils.js'
  * @returns {VersionTag} { fullTag: 'v2.3.4-beta.3' }
  */
 export function searchPrerelease(tagList: VersionTag[]): VersionTag {
-  let match_list: VersionTag[] = []
+  let prerelease_list: VersionTag[] = []
+  let with_suffix_list: VersionTag[] = []
+  let no_suffix_list: VersionTag[] = []
 
-  match_list = tagList.filter((tag) =>
+  prerelease_list = tagList.filter((tag) =>
     versionRegex(SearchType.PRERELEASE).test(tag.fullTag)
   )
 
-  if (match_list.length === 0) {
-    match_list = tagList.filter((tag) =>
-      versionRegex(SearchType.WITH_SUFFIX).test(tag.fullTag)
-    )
-  }
+  with_suffix_list = tagList.filter((tag) =>
+    versionRegex(SearchType.WITH_SUFFIX).test(tag.fullTag)
+  )
 
-  if (match_list.length === 0) {
-    match_list = tagList.filter((tag) =>
-      versionRegex(SearchType.NO_SUFFIX).test(tag.fullTag)
-    )
-  }
+  no_suffix_list = tagList.filter((tag) =>
+    versionRegex(SearchType.NO_SUFFIX).test(tag.fullTag)
+  )
 
-  const matched_tags: VersionTag[] = match_list ? sortVersions(match_list) : []
+  const matched_prerelease: VersionTag[] = sortVersions(prerelease_list)
 
-  const tag: VersionTag | undefined = matched_tags.pop()
+  const matched_suffix: VersionTag[] = sortVersions(with_suffix_list)
 
-  const latest_tag: VersionTag = {
-    fullTag: tag ? tag.fullTag : `${getPrefix()}0.0.0`,
-    prefix: getPrefix(),
-    tagName: tag ? tag.tagName : '0.0.0',
-    suffix: getSuffix(),
-    prerelease_number: tag?.prerelease_number,
-    number: tag?.number ? tag.number : { major: 0, minor: 0, patch: 0 }
-  }
+  const matched_no_suffix: VersionTag[] = sortVersions(no_suffix_list)
 
-  return latest_tag
+  const p = matched_prerelease.pop()
+  const ws = matched_suffix.pop()
+  const ns = matched_no_suffix.pop()
+
+  const results: VersionTag[] = [
+    p ?? defaultVersion(),
+    ws ?? defaultVersion(),
+    ns ?? defaultVersion()
+  ]
+
+  return sortVersions(results)[results.length - 1]
 }
 
 /**
@@ -64,7 +65,7 @@ export function searchBase(tagList: VersionTag[]): VersionTag {
     )
   }
 
-  const matched_tags: VersionTag[] = match_list ? sortVersions(match_list) : []
+  const matched_tags: VersionTag[] = sortVersions(match_list)
 
   const tag: VersionTag | undefined = matched_tags.pop()
 

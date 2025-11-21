@@ -77,7 +77,7 @@ describe('None bump with existing version and copy_from set to false', () => {
         }
       },
       {
-        fullTag: 'v2.3.4',
+        fullTag: 'v2.3.4-beta',
         prefix: 'v',
         tagName: '2.3.4',
         suffix: 'beta',
@@ -93,31 +93,35 @@ describe('None bump with existing version and copy_from set to false', () => {
     await run()
 
     // Verify the time output was set.
-    expect(core.setOutput).toHaveBeenCalledWith('updated_tag', 'v1.2.3-beta')
+    expect(core.setOutput).toHaveBeenCalledWith('updated_tag', 'v2.3.4-beta')
   })
 
   it('Should pick the latest existing version with the provided suffix and prerelease number and return it', async () => {
     const mockVersionTag: VersionTag[] = [
       {
-        fullTag: 'v1.2.3',
+        fullTag: 'v1.2.3-beta.1',
         prefix: 'v',
         tagName: '1.2.3',
         suffix: 'beta',
+        prerelease_number: '1',
         number: {
           major: 1,
           minor: 2,
-          patch: 3
+          patch: 3,
+          prerelease: 1
         }
       },
       {
-        fullTag: 'v2.3.4-beta.1',
+        fullTag: 'v1.2.3-beta.2',
         prefix: 'v',
-        tagName: '2.3.4',
+        tagName: '1.2.3',
         suffix: 'beta',
+        prerelease_number: '2',
         number: {
-          major: 2,
-          minor: 3,
-          patch: 4
+          major: 1,
+          minor: 2,
+          patch: 3,
+          prerelease: 2
         }
       }
     ]
@@ -126,6 +130,6 @@ describe('None bump with existing version and copy_from set to false', () => {
     await run()
 
     // Verify the time output was set.
-    expect(core.setOutput).toHaveBeenCalledWith('updated_tag', 'v2.3.4-beta.1')
+    expect(core.setOutput).toHaveBeenCalledWith('updated_tag', 'v1.2.3-beta.2')
   })
 })
