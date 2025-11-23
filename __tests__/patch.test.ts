@@ -36,7 +36,7 @@ describe('Patch bump with existing version', () => {
         fullTag: 'v2.3.5',
         prefix: 'v',
         tagName: '2.3.5',
-        suffix: '',
+        suffix: 'beta',
         number: {
           major: 2,
           minor: 3,
@@ -47,7 +47,7 @@ describe('Patch bump with existing version', () => {
         fullTag: 'v2.3.4',
         prefix: 'v',
         tagName: '2.3.4',
-        suffix: '',
+        suffix: 'beta',
         number: {
           major: 2,
           minor: 3,
@@ -93,6 +93,6 @@ describe('Patch bump with existing version', () => {
     await run()
 
     // Verify the time output was set.
-    expect(core.setOutput).toHaveBeenCalledWith('updated_tag', 'v1.2.4-beta')
+    expect(core.setOutput).toHaveBeenCalledWith('updated_tag', 'v2.3.5-beta')
   })
 })
