@@ -1,7 +1,7 @@
 import * as core from '@actions/core'
 import { BumpType, SearchType, VersionNumber, VersionTag } from './types.js'
 
-export function sortVersions(versionList: VersionTag[]): VersionTag[] {
+export function maxVersion(versionList: VersionTag[]): VersionTag {
   versionList.sort((a, b) => {
     if (a.number.major !== b.number.major) {
       return a.number.major - b.number.major
@@ -19,7 +19,7 @@ export function sortVersions(versionList: VersionTag[]): VersionTag[] {
     }
     return 0 // They are equal
   })
-  return versionList
+  return versionList.at(versionList.length - 1) ?? defaultVersion()
 }
 
 export function bumpTypeFromString(bump: string): BumpType {
@@ -141,7 +141,7 @@ export function getTargetSuffix(): string {
 
 export function defaultVersion(): VersionTag {
   const version: VersionTag = {
-    fullTag: `${getPrefix()}0.0.0`,
+    fullTag: `${getPrefix()}0.0.0-${getSuffix()}`,
     prefix: getPrefix(),
     suffix: getSuffix(),
     tagName: '0.0.0',
