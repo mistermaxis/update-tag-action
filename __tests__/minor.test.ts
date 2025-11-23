@@ -36,7 +36,7 @@ describe('Minor bump with existing version', () => {
         fullTag: 'v2.4.6',
         prefix: 'v',
         tagName: '2.4.6',
-        suffix: '',
+        suffix: 'beta',
         number: {
           major: 2,
           minor: 4,
@@ -44,10 +44,10 @@ describe('Minor bump with existing version', () => {
         }
       },
       {
-        fullTag: 'v2.3.4',
+        fullTag: 'v1.3.4',
         prefix: 'v',
         tagName: '2.3.4',
-        suffix: '',
+        suffix: 'beta',
         number: {
           major: 2,
           minor: 3,
@@ -93,6 +93,6 @@ describe('Minor bump with existing version', () => {
     await run()
 
     // Verify the time output was set.
-    expect(core.setOutput).toHaveBeenCalledWith('updated_tag', 'v1.3.0-beta')
+    expect(core.setOutput).toHaveBeenCalledWith('updated_tag', 'v2.4.0-beta')
   })
 })
