@@ -31277,7 +31277,7 @@ var BumpType;
     BumpType[BumpType["MAJOR"] = 4] = "MAJOR";
 })(BumpType || (BumpType = {}));
 
-function sortVersions(versionList) {
+function maxVersion(versionList) {
     versionList.sort((a, b) => {
         if (a.number.major !== b.number.major) {
             return a.number.major - b.number.major;
@@ -31295,7 +31295,7 @@ function sortVersions(versionList) {
         }
         return 0; // They are equal
     });
-    return versionList;
+    return versionList.at(versionList.length - 1) ?? defaultVersion();
 }
 function bumpTypeFromString(bump) {
     switch (bump) {
@@ -31391,7 +31391,7 @@ function getTargetSuffix() {
 }
 function defaultVersion() {
     const version = {
-        fullTag: `${getPrefix()}0.0.0`,
+        fullTag: `${getPrefix()}0.0.0-${getSuffix()}`,
         prefix: getPrefix(),
         suffix: getSuffix(),
         tagName: '0.0.0',
@@ -31443,18 +31443,10 @@ function searchPrerelease(tagList) {
     prerelease_list = tagList.filter((tag) => versionRegex(SearchType.PRERELEASE).test(tag.fullTag));
     with_suffix_list = tagList.filter((tag) => versionRegex(SearchType.WITH_SUFFIX).test(tag.fullTag));
     no_suffix_list = tagList.filter((tag) => versionRegex(SearchType.NO_SUFFIX).test(tag.fullTag));
-    const matched_prerelease = sortVersions(prerelease_list);
-    const matched_suffix = sortVersions(with_suffix_list);
-    const matched_no_suffix = sortVersions(no_suffix_list);
-    const p = matched_prerelease.pop();
-    const ws = matched_suffix.pop();
-    const ns = matched_no_suffix.pop();
-    const results = [
-        p ?? defaultVersion(),
-        ws ?? defaultVersion(),
-        ns ?? defaultVersion()
-    ];
-    return sortVersions(results)[results.length - 1];
+    const matched_prerelease = maxVersion(prerelease_list);
+    const matched_suffix = maxVersion(with_suffix_list);
+    const matched_no_suffix = maxVersion(no_suffix_list);
+    return maxVersion([matched_suffix, matched_no_suffix, matched_prerelease]);
 }
 /**
  * Returns the latest version without prerelease component and the provided suffix, if any
@@ -31463,23 +31455,15 @@ function searchPrerelease(tagList) {
  * @returns {VersionTag} { fullTag: 'v2.3.4-beta' }
  */
 function searchBase(tagList) {
-    let match_list = [];
+    let suffix_list = [];
+    let no_suffix_list = [];
     if (getSuffix() !== '') {
-        match_list = tagList.filter((tag) => tag.fullTag.match(versionRegex(SearchType.WITH_SUFFIX)));
+        suffix_list = tagList.filter((tag) => tag.fullTag.match(versionRegex(SearchType.WITH_SUFFIX)));
     }
-    if (match_list.length === 0) {
-        match_list = tagList.filter((tag) => tag.fullTag.match(versionRegex(SearchType.NO_SUFFIX)));
-    }
-    const matched_tags = sortVersions(match_list);
-    const tag = matched_tags.pop();
-    const latest_tag = {
-        fullTag: tag ? tag.fullTag : `${getPrefix()}0.0.0`,
-        prefix: getPrefix(),
-        tagName: tag ? tag.tagName : '0.0.0',
-        suffix: getSuffix(),
-        number: tag?.number ? tag.number : { major: 0, minor: 0, patch: 0 }
-    };
-    return latest_tag;
+    no_suffix_list = tagList.filter((tag) => tag.fullTag.match(versionRegex(SearchType.NO_SUFFIX)));
+    const matched_suffix = maxVersion(suffix_list);
+    const matched_no_suffix = maxVersion(no_suffix_list);
+    return maxVersion([matched_suffix, matched_no_suffix]);
 }
 
 /**
