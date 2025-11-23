@@ -1,8 +1,8 @@
 {
   "name": "typescript-action",
   "description": "Update Tag GitHub Action",
-  "version": "v1.0.0",
-  "author": "",
+  "version": "v2.0.0",
+  "author": "Maximiliano Diaz",
   "type": "module",
   "private": true,
   "homepage": "https://github.com/mistermaxis/update-tag-action",
@@ -14,7 +14,7 @@
     "url": "https://github.com/mistermaxis/update-tag-action/issues"
   },
   "keywords": [
-    "actions"
+    "actions, tag, release"
   ],
   "exports": {
     ".": "./dist/index.js"
