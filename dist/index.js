@@ -31271,10 +31271,12 @@ var SearchType;
 var BumpType;
 (function (BumpType) {
     BumpType[BumpType["NONE"] = 0] = "NONE";
-    BumpType[BumpType["PRERELEASE"] = 1] = "PRERELEASE";
-    BumpType[BumpType["PATCH"] = 2] = "PATCH";
-    BumpType[BumpType["MINOR"] = 3] = "MINOR";
-    BumpType[BumpType["MAJOR"] = 4] = "MAJOR";
+    BumpType[BumpType["PATCH"] = 1] = "PATCH";
+    BumpType[BumpType["MINOR"] = 2] = "MINOR";
+    BumpType[BumpType["MAJOR"] = 3] = "MAJOR";
+    BumpType[BumpType["PREPATCH"] = 4] = "PREPATCH";
+    BumpType[BumpType["PREMINOR"] = 5] = "PREMINOR";
+    BumpType[BumpType["PREMAJOR"] = 6] = "PREMAJOR";
 })(BumpType || (BumpType = {}));
 
 function maxVersion(versionList) {
@@ -31299,8 +31301,12 @@ function maxVersion(versionList) {
 }
 function bumpTypeFromString(bump) {
     switch (bump) {
-        case 'prerelease':
-            return BumpType.PRERELEASE;
+        case 'prepatch':
+            return BumpType.PREPATCH;
+        case 'preminor':
+            return BumpType.PREMINOR;
+        case 'premajor':
+            return BumpType.PREMAJOR;
         case 'patch':
             return BumpType.PATCH;
         case 'minor':
@@ -31361,8 +31367,8 @@ function tagNameFromNumber(versionNumber) {
 }
 function fullTagFromObject(tag) {
     let version_suffix;
-    const copy_from = getCopyFrom();
-    const target_suffix = getTargetSuffix();
+    const copy_from = getReplaceSuffix();
+    const target_suffix = getNewSuffix();
     if (copy_from) {
         version_suffix = target_suffix ? `-${target_suffix}` : '';
     }
@@ -31380,14 +31386,15 @@ function getPrefix() {
 function getSuffix() {
     return coreExports.getInput('suffix');
 }
-function getCopyFrom() {
-    return coreExports.getInput('copy_from') == 'true' ? true : false;
+function getReplaceSuffix() {
+    return coreExports.getInput('replace_suffix') == 'true' ? true : false;
 }
 function getBump() {
     return bumpTypeFromString(coreExports.getInput('bump'));
 }
-function getTargetSuffix() {
-    return coreExports.getInput('target_suffix');
+function getNewSuffix() {
+    const newSuffix = coreExports.getInput('new_suffix');
+    return newSuffix === 'undefined' ? undefined : newSuffix;
 }
 function defaultVersion() {
     const version = {
@@ -31396,7 +31403,6 @@ function defaultVersion() {
         suffix: getSuffix(),
         tagName: '0.0.0',
         prerelease_number: undefined,
-        target_suffix: getTargetSuffix(),
         number: {
             major: 0,
             minor: 0,
@@ -31457,13 +31463,17 @@ function searchPrerelease(tagList) {
 function searchBase(tagList) {
     let suffix_list = [];
     let no_suffix_list = [];
-    if (getSuffix() !== '') {
-        suffix_list = tagList.filter((tag) => tag.fullTag.match(versionRegex(SearchType.WITH_SUFFIX)));
+    if (getSuffix() === '') {
+        no_suffix_list = tagList.filter((tag) => versionRegex(SearchType.NO_SUFFIX).test(tag.fullTag));
+        return maxVersion(no_suffix_list);
     }
-    no_suffix_list = tagList.filter((tag) => tag.fullTag.match(versionRegex(SearchType.NO_SUFFIX)));
-    const matched_suffix = maxVersion(suffix_list);
-    const matched_no_suffix = maxVersion(no_suffix_list);
-    return maxVersion([matched_suffix, matched_no_suffix]);
+    else {
+        suffix_list = tagList.filter((tag) => versionRegex(SearchType.WITH_SUFFIX).test(tag.fullTag));
+        no_suffix_list = tagList.filter((tag) => versionRegex(SearchType.NO_SUFFIX).test(tag.fullTag));
+        const matched_suffix = maxVersion(suffix_list);
+        const matched_no_suffix = maxVersion(no_suffix_list);
+        return maxVersion([matched_suffix, matched_no_suffix]);
+    }
 }
 
 /**
@@ -31473,7 +31483,7 @@ function searchBase(tagList) {
  * @returns {VersionTag} { fullTag: 'v1.2.3-beta.3' }
  */
 function updatePrerelease(tag) {
-    const updated_tag = {
+    let updated_tag = {
         fullTag: '',
         prefix: tag.prefix,
         tagName: '',
@@ -31482,12 +31492,18 @@ function updatePrerelease(tag) {
     };
     if (versionRegex(SearchType.NO_SUFFIX).test(tag.fullTag) ||
         versionRegex(SearchType.WITH_SUFFIX).test(tag.fullTag)) {
-        updated_tag.number = {
-            major: tag.number.major,
-            minor: tag.number.minor + 1,
-            patch: 0,
-            prerelease: 1
-        };
+        switch (getBump()) {
+            case BumpType.PREMAJOR:
+                updated_tag = updateMajor(tag);
+                break;
+            case BumpType.PREMINOR:
+                updated_tag = updateMinor(tag);
+                break;
+            case BumpType.PREPATCH:
+                updated_tag = updatePatch(tag);
+                break;
+        }
+        updated_tag.number.prerelease = 1;
         updated_tag.prerelease_number = '1';
         updated_tag.tagName = tagNameFromNumber(updated_tag.number);
         updated_tag.fullTag = fullTagFromObject(updated_tag);
@@ -31573,15 +31589,24 @@ function updateNone(tag) {
 function checkForErrors() {
     const bump = getBump();
     const suffix = getSuffix();
-    const copy_from = getCopyFrom();
-    if (bump === BumpType.PRERELEASE && !suffix) {
+    const replace_suffix = getReplaceSuffix();
+    if ((bump === BumpType.PREMAJOR ||
+        bump === BumpType.PREMINOR ||
+        bump === BumpType.PREPATCH) &&
+        !suffix) {
         throw new Error('Prerelease bumps must be used with a suffix');
     }
-    if (bump === BumpType.PRERELEASE && copy_from === true) {
-        throw new Error('The flag copy_from:true is not meant to be used with bump:prerelease');
+    if ((bump === BumpType.PREMAJOR ||
+        bump === BumpType.PREMINOR ||
+        bump === BumpType.PREPATCH) &&
+        replace_suffix === true) {
+        throw new Error('The flag replace_suffix:true is not meant to be used with prerelease bumps');
     }
-    if (suffix && copy_from == true) {
-        coreExports.warning('If there is no tag with the provided suffix, copy_from is unnecessary');
+    if (replace_suffix === true && getNewSuffix() === undefined) {
+        throw new Error('A new_suffix must be defined when using replace_suffix:true');
+    }
+    if (suffix && replace_suffix === true) {
+        coreExports.warning('If there is no tag with the provided suffix, replace_suffix is unnecessary');
     }
 }
 
@@ -31593,13 +31618,15 @@ function checkForErrors() {
 async function run() {
     try {
         const bump = getBump();
-        const copy_from = getCopyFrom();
+        const copy_from = getReplaceSuffix();
         const tagList = await listTags();
         checkForErrors();
         let latest_tag;
         let updated_tag;
         switch (bump) {
-            case BumpType.PRERELEASE:
+            case BumpType.PREPATCH:
+            case BumpType.PREMINOR:
+            case BumpType.PREMAJOR:
                 latest_tag = searchPrerelease(tagList);
                 updated_tag = updatePrerelease(latest_tag);
                 break;
