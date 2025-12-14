@@ -7,10 +7,12 @@ export enum SearchType {
 
 export enum BumpType {
   NONE,
-  PRERELEASE,
   PATCH,
   MINOR,
-  MAJOR
+  MAJOR,
+  PREPATCH,
+  PREMINOR,
+  PREMAJOR
 }
 
 export type VersionTag = {
@@ -19,7 +21,6 @@ export type VersionTag = {
   tagName: string
   suffix?: string
   prerelease_number?: string
-  target_suffix?: string
   number: VersionNumber
 }
 
