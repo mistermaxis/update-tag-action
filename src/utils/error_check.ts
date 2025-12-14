@@ -20,7 +20,7 @@ export function checkForErrors() {
     (bump === BumpType.PREMAJOR ||
       bump === BumpType.PREMINOR ||
       bump === BumpType.PREPATCH) &&
-    !suffix
+    replace_suffix === true
   ) {
     throw new Error(
       'The flag replace_suffix:true is not meant to be used with prerelease bumps'
