@@ -24,8 +24,12 @@ export function maxVersion(versionList: VersionTag[]): VersionTag {
 
 export function bumpTypeFromString(bump: string): BumpType {
   switch (bump) {
-    case 'prerelease':
-      return BumpType.PRERELEASE
+    case 'prepatch':
+      return BumpType.PREPATCH
+    case 'preminor':
+      return BumpType.PREMINOR
+    case 'premajor':
+      return BumpType.PREMAJOR
     case 'patch':
       return BumpType.PATCH
     case 'minor':
@@ -104,8 +108,8 @@ export function tagNameFromNumber(versionNumber: VersionNumber): string {
 
 export function fullTagFromObject(tag: VersionTag): string {
   let version_suffix: string
-  const copy_from: boolean = getCopyFrom()
-  const target_suffix: string = getTargetSuffix()
+  const copy_from: boolean = getReplaceSuffix()
+  const target_suffix: string | undefined = getNewSuffix()
 
   if (copy_from) {
     version_suffix = target_suffix ? `-${target_suffix}` : ''
@@ -127,16 +131,17 @@ export function getSuffix(): string {
   return core.getInput('suffix')
 }
 
-export function getCopyFrom(): boolean {
-  return core.getInput('copy_from') == 'true' ? true : false
+export function getReplaceSuffix(): boolean {
+  return core.getInput('replace_suffix') == 'true' ? true : false
 }
 
 export function getBump(): BumpType {
   return bumpTypeFromString(core.getInput('bump'))
 }
 
-export function getTargetSuffix(): string {
-  return core.getInput('target_suffix')
+export function getNewSuffix(): string | undefined {
+  const newSuffix: string = core.getInput('new_suffix')
+  return newSuffix === 'undefined' ? undefined : newSuffix
 }
 
 export function defaultVersion(): VersionTag {
@@ -146,7 +151,6 @@ export function defaultVersion(): VersionTag {
     suffix: getSuffix(),
     tagName: '0.0.0',
     prerelease_number: undefined,
-    target_suffix: getTargetSuffix(),
     number: {
       major: 0,
       minor: 0,
