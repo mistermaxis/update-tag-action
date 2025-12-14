@@ -1,7 +1,7 @@
 {
   "name": "typescript-action",
   "description": "Update Tag GitHub Action",
-  "version": "v2.0.0",
+  "version": "v3.0.0",
   "author": "Maximiliano Diaz",
   "type": "module",
   "private": true,
@@ -47,7 +47,7 @@
     "@rollup/plugin-node-resolve": "^16.0.1",
     "@rollup/plugin-typescript": "^12.1.4",
     "@types/jest": "^30.0.0",
-    "@types/node": "^24.10.1",
+    "@types/node": "^25.0.0",
     "@typescript-eslint/eslint-plugin": "^8.48.1",
     "@typescript-eslint/parser": "^8.32.1",
     "eslint": "^9.36.0",
