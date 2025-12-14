@@ -14,7 +14,9 @@ branding:
 inputs:
   bump:
     description:
-      The type of bump to apply to the tag. Options can be major, minor, patch,
+      The type of bump to apply to the tag.
+      Options can be major, minor, patch,
+      premajor, preminor, prepatch
       prerelease or none. Defaults to none. Not required
     required: false
     default: 'none'
@@ -30,19 +32,19 @@ inputs:
       tags. Defaults to null/empty string. Not required
     required: false
     default: ''
-  copy_from:
+  replace_suffix:
     description:
       Flag that marks whether a target suffix should be provided as the version
       is changing stage. Eg from v1.2.3-beta to v1.2.3 or from v1.2.0-rc.4 to
       v1.2.0
     required: false
     default: 'false'
-  target_suffix:
+  new_suffix:
     description:
       The target suffix to assign to the tag in place of the source one. Eg
       alpha -> beta or beta -> ''
     required: false
-    default: ''
+    default: 'undefined'
   github_token:
     description: 'Token to access GitHub.'
     required: true
