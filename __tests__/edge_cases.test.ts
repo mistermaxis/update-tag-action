@@ -17,13 +17,35 @@ describe('Edge cases', () => {
     jest.clearAllMocks()
   })
 
+  it('Should fail if replace_suffix is true and new_suffix is undefined', async () => {
+    core.getInput.mockImplementation((inputName: string) => {
+      const inputValues: { [key: string]: string } = {
+        prefix: 'v',
+        bump: 'minor',
+        suffix: 'beta',
+        replace_suffix: 'true',
+        new_suffix: 'undefined'
+      }
+      return inputValues[inputName]
+    })
+
+    const mockVersionTag: VersionTag[] = []
+    listTags.mockImplementation(() => Promise.resolve(mockVersionTag))
+
+    await run()
+
+    expect(core.setFailed).toHaveBeenCalledWith(
+      'A new_suffix must be defined when using replace_suffix:true'
+    )
+  })
+
   it('Should fail if bump is prerelease and suffix is undefined', async () => {
     core.getInput.mockImplementation((inputName: string) => {
       const inputValues: { [key: string]: string } = {
         prefix: 'v',
         bump: 'prerelease',
         suffix: '',
-        copy_from: 'false'
+        replace_suffix: 'false'
       }
       return inputValues[inputName]
     })
@@ -61,13 +83,13 @@ describe('Edge cases', () => {
     )
   })
 
-  it('Should fail if bump is prerelease and copy_from is true', async () => {
+  it('Should fail if bump is prerelease and replace_suffix is true', async () => {
     core.getInput.mockImplementation((inputName: string) => {
       const inputValues: { [key: string]: string } = {
         prefix: 'v',
         bump: 'prerelease',
         suffix: 'beta',
-        copy_from: 'true'
+        replace_suffix: 'true'
       }
       return inputValues[inputName]
     })
@@ -101,18 +123,18 @@ describe('Edge cases', () => {
     await run()
 
     expect(core.setFailed).toHaveBeenCalledWith(
-      'The flag copy_from:true is not meant to be used with bump:prerelease'
+      'The flag replace_suffix:true is not meant to be used with bump:prerelease'
     )
   })
 
-  it('Should pick the latest existing valid version with the provided suffix and replace it with the target_suffix', async () => {
+  it('Should pick the latest existing valid version with the provided suffix and replace it with the new_suffix', async () => {
     core.getInput.mockImplementation((inputName: string) => {
       const inputValues: { [key: string]: string } = {
         prefix: 'v',
         bump: 'none',
         suffix: 'alpha',
-        target_suffix: 'beta',
-        copy_from: 'true'
+        new_suffix: 'beta',
+        replace_suffix: 'true'
       }
       return inputValues[inputName]
     })
@@ -155,8 +177,8 @@ describe('Edge cases', () => {
         prefix: 'v',
         bump: 'minor',
         suffix: '',
-        target_suffix: '',
-        copy_from: 'false'
+        new_suffix: '',
+        replace_suffix: 'false'
       }
       return inputValues[inputName]
     })
@@ -176,8 +198,8 @@ describe('Edge cases', () => {
         prefix: 'v',
         bump: 'prerelease',
         suffix: 'beta',
-        target_suffix: '',
-        copy_from: 'false'
+        new_suffix: '',
+        replace_suffix: 'false'
       }
       return inputValues[inputName]
     })
@@ -197,8 +219,8 @@ describe('Edge cases', () => {
         prefix: '',
         bump: 'minor',
         suffix: '',
-        target_suffix: '',
-        copy_from: 'false'
+        new_suffix: '',
+        replace_suffix: 'false'
       }
       return inputValues[inputName]
     })
