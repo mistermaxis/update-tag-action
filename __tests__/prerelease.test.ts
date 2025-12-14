@@ -17,7 +17,7 @@ describe('Prerelease bump with existing version', () => {
     core.getInput.mockImplementation((inputName: string) => {
       const inputValues: { [key: string]: string } = {
         prefix: 'v',
-        bump: 'prerelease',
+        bump: 'preminor',
         suffix: 'beta',
         copy_from: 'false'
       }

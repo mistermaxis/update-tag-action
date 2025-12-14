@@ -44,18 +44,23 @@ export function searchBase(tagList: VersionTag[]): VersionTag {
   let suffix_list: VersionTag[] = []
   let no_suffix_list: VersionTag[] = []
 
-  if (getSuffix() !== '') {
-    suffix_list = tagList.filter((tag) =>
-      tag.fullTag.match(versionRegex(SearchType.WITH_SUFFIX))
+  if (getSuffix() === '') {
+    no_suffix_list = tagList.filter((tag) =>
+      versionRegex(SearchType.NO_SUFFIX).test(tag.fullTag)
     )
+    return maxVersion(no_suffix_list)
+  } else {
+    suffix_list = tagList.filter((tag) =>
+      versionRegex(SearchType.WITH_SUFFIX).test(tag.fullTag)
+    )
+
+    no_suffix_list = tagList.filter((tag) =>
+      versionRegex(SearchType.NO_SUFFIX).test(tag.fullTag)
+    )
+
+    const matched_suffix: VersionTag = maxVersion(suffix_list)
+    const matched_no_suffix: VersionTag = maxVersion(no_suffix_list)
+
+    return maxVersion([matched_suffix, matched_no_suffix])
   }
-
-  no_suffix_list = tagList.filter((tag) =>
-    tag.fullTag.match(versionRegex(SearchType.NO_SUFFIX))
-  )
-
-  const matched_suffix: VersionTag = maxVersion(suffix_list)
-  const matched_no_suffix: VersionTag = maxVersion(no_suffix_list)
-
-  return maxVersion([matched_suffix, matched_no_suffix])
 }
