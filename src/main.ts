@@ -9,7 +9,7 @@ import {
   updateNone
 } from './utils/update_tags.js'
 import { BumpType, VersionTag } from './utils/types.js'
-import { getBump, getCopyFrom } from './utils/utils.js'
+import { getBump, getReplaceSuffix } from './utils/utils.js'
 import { checkForErrors } from './utils/error_check.js'
 
 /**
@@ -20,7 +20,7 @@ import { checkForErrors } from './utils/error_check.js'
 export async function run(): Promise<void> {
   try {
     const bump: BumpType = getBump()
-    const copy_from: boolean = getCopyFrom()
+    const copy_from: boolean = getReplaceSuffix()
     const tagList: VersionTag[] = await listTags()
 
     checkForErrors()
@@ -29,7 +29,9 @@ export async function run(): Promise<void> {
     let updated_tag: VersionTag
 
     switch (bump) {
-      case BumpType.PRERELEASE:
+      case BumpType.PREPATCH:
+      case BumpType.PREMINOR:
+      case BumpType.PREMAJOR:
         latest_tag = searchPrerelease(tagList)
         updated_tag = updatePrerelease(latest_tag)
         break
