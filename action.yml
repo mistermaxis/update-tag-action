@@ -14,10 +14,9 @@ branding:
 inputs:
   bump:
     description:
-      The type of bump to apply to the tag.
-      Options can be major, minor, patch,
-      premajor, preminor, prepatch
-      prerelease or none. Defaults to none. Not required
+      The type of bump to apply to the tag. Options can be major, minor, patch,
+      premajor, preminor, prepatch prerelease or none. Defaults to none. Not
+      required
     required: false
     default: 'none'
   prefix:
