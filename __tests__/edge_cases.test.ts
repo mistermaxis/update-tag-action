@@ -43,37 +43,14 @@ describe('Edge cases', () => {
     core.getInput.mockImplementation((inputName: string) => {
       const inputValues: { [key: string]: string } = {
         prefix: 'v',
-        bump: 'prerelease',
+        bump: 'preminor',
         suffix: '',
         replace_suffix: 'false'
       }
       return inputValues[inputName]
     })
 
-    const mockVersionTag: VersionTag[] = [
-      {
-        fullTag: 'v1.2.3',
-        prefix: 'v',
-        tagName: '1.2.3',
-        suffix: '',
-        number: {
-          major: 1,
-          minor: 2,
-          patch: 3
-        }
-      },
-      {
-        fullTag: 'v2.3.4',
-        prefix: 'v',
-        tagName: '2.3.4',
-        suffix: '',
-        number: {
-          major: 2,
-          minor: 3,
-          patch: 4
-        }
-      }
-    ]
+    const mockVersionTag: VersionTag[] = []
     listTags.mockImplementation(() => Promise.resolve(mockVersionTag))
 
     await run()
@@ -87,43 +64,20 @@ describe('Edge cases', () => {
     core.getInput.mockImplementation((inputName: string) => {
       const inputValues: { [key: string]: string } = {
         prefix: 'v',
-        bump: 'prerelease',
+        bump: 'premajor',
         suffix: 'beta',
         replace_suffix: 'true'
       }
       return inputValues[inputName]
     })
 
-    const mockVersionTag: VersionTag[] = [
-      {
-        fullTag: 'v1.2.3',
-        prefix: 'v',
-        tagName: '1.2.3',
-        suffix: '',
-        number: {
-          major: 1,
-          minor: 2,
-          patch: 3
-        }
-      },
-      {
-        fullTag: 'v2.3.4',
-        prefix: 'v',
-        tagName: '2.3.4',
-        suffix: '',
-        number: {
-          major: 2,
-          minor: 3,
-          patch: 4
-        }
-      }
-    ]
+    const mockVersionTag: VersionTag[] = []
     listTags.mockImplementation(() => Promise.resolve(mockVersionTag))
 
     await run()
 
     expect(core.setFailed).toHaveBeenCalledWith(
-      'The flag replace_suffix:true is not meant to be used with bump:prerelease'
+      'The flag replace_suffix:true is not meant to be used with prerelease bumps'
     )
   })
 
@@ -196,7 +150,7 @@ describe('Edge cases', () => {
     core.getInput.mockImplementation((inputName: string) => {
       const inputValues: { [key: string]: string } = {
         prefix: 'v',
-        bump: 'prerelease',
+        bump: 'preminor',
         suffix: 'beta',
         new_suffix: '',
         replace_suffix: 'false'
