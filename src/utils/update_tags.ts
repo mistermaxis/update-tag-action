@@ -1,5 +1,10 @@
-import { SearchType, VersionTag } from './types.js'
-import { fullTagFromObject, tagNameFromNumber, versionRegex } from './utils.js'
+import { BumpType, SearchType, VersionTag } from './types.js'
+import {
+  fullTagFromObject,
+  getBump,
+  tagNameFromNumber,
+  versionRegex
+} from './utils.js'
 
 /**
  * Returns the tag after updating its prerelease version component
@@ -8,7 +13,7 @@ import { fullTagFromObject, tagNameFromNumber, versionRegex } from './utils.js'
  * @returns {VersionTag} { fullTag: 'v1.2.3-beta.3' }
  */
 export function updatePrerelease(tag: VersionTag): VersionTag {
-  const updated_tag: VersionTag = {
+  let updated_tag: VersionTag = {
     fullTag: '',
     prefix: tag.prefix,
     tagName: '',
@@ -20,12 +25,21 @@ export function updatePrerelease(tag: VersionTag): VersionTag {
     versionRegex(SearchType.NO_SUFFIX).test(tag.fullTag) ||
     versionRegex(SearchType.WITH_SUFFIX).test(tag.fullTag)
   ) {
-    updated_tag.number = {
-      major: tag.number.major,
-      minor: tag.number.minor + 1,
-      patch: 0,
-      prerelease: 1
+    switch (getBump()) {
+      case BumpType.PREMAJOR:
+        updated_tag = updateMajor(tag)
+        break
+      case BumpType.PREMINOR:
+        updated_tag = updateMinor(tag)
+        break
+      case BumpType.PREPATCH:
+        updated_tag = updatePatch(tag)
+        break
+      default:
+        break
     }
+
+    updated_tag.number.prerelease = 1
     updated_tag.prerelease_number = '1'
     updated_tag.tagName = tagNameFromNumber(updated_tag.number)
     updated_tag.fullTag = fullTagFromObject(updated_tag)
