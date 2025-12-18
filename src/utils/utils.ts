@@ -12,10 +12,8 @@ export function maxVersion(versionList: VersionTag[]): VersionTag {
     if (a.number.patch !== b.number.patch) {
       return a.number.patch - b.number.patch
     }
-    if (a.number.prerelease && b.number.prerelease) {
-      if (a.number.prerelease !== b.number.prerelease) {
-        return a.number.prerelease - b.number.prerelease
-      }
+    if (a.number.prerelease !== b.number.prerelease) {
+      return a.number.prerelease! - b.number.prerelease!
     }
     return 0 // They are equal
   })
@@ -48,8 +46,8 @@ export function versionRegex(searchType: SearchType): RegExp {
   const prerelease_number: string = '.[0-9]{1,3}'
 
   const pattern_prerelease: string = `^${getPrefix()}${version_number}${suffix}${prerelease_number}$`
-  const pattern_suffix: string = `^${getPrefix() ?? ''}${version_number}${suffix}$`
-  const pattern_base: string = `^${getPrefix() ?? ''}${version_number}$`
+  const pattern_suffix: string = `^${getPrefix()}${version_number}${suffix}$`
+  const pattern_base: string = `^${getPrefix()}${version_number}$`
   const pattern_stripped: string = `${version_number}`
 
   switch (searchType) {
@@ -92,7 +90,7 @@ export function tagToNumber(tag: string): VersionNumber {
   }
 
   const numbers = stripped_version?.[0].split('.').map(Number)
-  const version_numbers = numbers ? numbers : [0, 0, 0]
+  const version_numbers = numbers!
   const version_number: VersionNumber = {
     major: version_numbers[0],
     minor: version_numbers[1],
@@ -108,11 +106,11 @@ export function tagNameFromNumber(versionNumber: VersionNumber): string {
 
 export function fullTagFromObject(tag: VersionTag): string {
   let version_suffix: string
-  const copy_from: boolean = getReplaceSuffix()
-  const target_suffix: string | undefined = getNewSuffix()
+  const replace_suffix: boolean = getReplaceSuffix()
+  const new_suffix: string | undefined = getNewSuffix()
 
-  if (copy_from) {
-    version_suffix = target_suffix ? `-${target_suffix}` : ''
+  if (replace_suffix) {
+    version_suffix = `-${new_suffix}`
   } else {
     version_suffix = tag.suffix ? `-${tag.suffix}` : ''
   }
@@ -120,7 +118,7 @@ export function fullTagFromObject(tag: VersionTag): string {
   const prerelease: string = tag.prerelease_number
     ? `.${tag.prerelease_number}`
     : ''
-  return `${tag.prefix ?? ''}${tag.tagName}${version_suffix}${copy_from ? '' : prerelease}`
+  return `${tag.prefix}${tag.tagName}${version_suffix}${replace_suffix ? '' : prerelease}`
 }
 
 export function getPrefix(): string {
