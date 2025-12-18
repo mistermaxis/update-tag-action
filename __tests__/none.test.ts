@@ -11,7 +11,7 @@ jest.unstable_mockModule('../src/utils/list_tags.js', () => ({ listTags }))
 // mocks are used in place of any actual dependencies.
 const { run } = await import('../src/main.js')
 
-describe('None bump with existing version and copy_from set to false', () => {
+describe('None bump', () => {
   beforeEach(() => {
     // Set the action's inputs as return values from core.getInput().
     core.getInput.mockImplementation((inputName: string) => {
@@ -19,7 +19,7 @@ describe('None bump with existing version and copy_from set to false', () => {
         prefix: 'v',
         bump: 'none',
         suffix: 'beta',
-        copy_from: 'false'
+        replace_suffix: 'false'
       }
       return inputValues[inputName]
     })
