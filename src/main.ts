@@ -19,11 +19,10 @@ import { checkForErrors } from './utils/error_check.js'
  */
 export async function run(): Promise<void> {
   try {
-    const bump: BumpType = getBump()
-    const copy_from: boolean = getReplaceSuffix()
-    const tagList: VersionTag[] = await listTags()
-
     checkForErrors()
+    const bump: BumpType = getBump()
+    const replace_suffix: boolean = getReplaceSuffix()
+    const tagList: VersionTag[] = await listTags()
 
     let latest_tag: VersionTag
     let updated_tag: VersionTag
@@ -50,7 +49,7 @@ export async function run(): Promise<void> {
       case BumpType.NONE:
       default:
         latest_tag = searchPrerelease(tagList)
-        updated_tag = copy_from ? updateNone(latest_tag) : latest_tag
+        updated_tag = replace_suffix ? updateNone(latest_tag) : latest_tag
         break
     }
 
@@ -58,8 +57,8 @@ export async function run(): Promise<void> {
     core.setOutput('updated_tag', updated_tag.fullTag)
   } catch (error) {
     // Fail the workflow run if an error occurs
-    if (error instanceof Error) {
-      core.setFailed(error.message)
-    }
+    //if (error instanceof Error) {
+    core.setFailed(`${error}`)
+    //}
   }
 }
