@@ -37,7 +37,7 @@
   },
   "license": "MIT",
   "dependencies": {
-    "@actions/core": "^1.11.1"
+    "@actions/core": "^2.0.0"
   },
   "devDependencies": {
     "@eslint/compat": "^2.0.0",
@@ -48,6 +48,7 @@
     "@rollup/plugin-typescript": "^12.1.4",
     "@types/jest": "^30.0.0",
     "@types/node": "^25.0.0",
+    "@types/sinon": "^21.0.0",
     "@typescript-eslint/eslint-plugin": "^8.48.1",
     "@typescript-eslint/parser": "^8.32.1",
     "eslint": "^9.36.0",
@@ -61,6 +62,7 @@
     "prettier": "^3.7.4",
     "prettier-eslint": "^16.4.2",
     "rollup": "^4.53.3",
+    "sinon": "^21.0.0",
     "ts-jest": "^29.4.6",
     "ts-jest-resolver": "^2.0.1",
     "typescript": "^5.9.3"
