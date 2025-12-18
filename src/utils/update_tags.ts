@@ -33,9 +33,8 @@ export function updatePrerelease(tag: VersionTag): VersionTag {
         updated_tag = updateMinor(tag)
         break
       case BumpType.PREPATCH:
-        updated_tag = updatePatch(tag)
-        break
       default:
+        updated_tag = updatePatch(tag)
         break
     }
 
