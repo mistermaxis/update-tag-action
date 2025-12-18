@@ -2,7 +2,7 @@
 
 ## Grab the latest tag in your repository and update it
 
-### An action to update version tag using semantic versioning
+### An action to update a version tag using semver formatting
 
 [![GitHub Super-Linter](https://github.com/mistermaxis/update-tag-action/actions/workflows/linter.yml/badge.svg)](https://github.com/super-linter/super-linter)
 ![CI](https://github.com/mistermaxis/update-tag-action/actions/workflows/ci.yml/badge.svg)
@@ -12,28 +12,43 @@
 
 ### Inputs
 
-- `bump`: the type of increase to be made. Can be major, minor, patch,
-  prerelease or none. Defaults to `none`, Not required
-
-- `prefix`: prefix to use before the version number. It could be any string.
-  Defaults to `v`. Not required
-
-- `suffix`: suffix to use after the version number. Usually for prereleases.
-  Defaults to empty string: `''`
-
-- `copy_from`: Whether the tag should copy the version number and update the
-  suffix. Eg: `v1.2.3-beta -> v1.2.3` To be used in conjunction with `bump:none`
-  and target_suffix. Not required
-
-- `target_suffix`: The target suffix to assign to the tag in place of the source
-  one. Eg `alpha -> beta or beta -> ''`
+| Name             | Type   | Default | Required | Description                                                                                                                                      |
+| :--------------- | ------ | ------- | -------- | ------------------------------------------------------------------------------------------------------------------------------------------------ |
+| `bump`           | String | `none`  | false    | The type of bump. Can be major, minor, patch, prerelease or none. Defaults to `none`, Not required                                               |
+| `prefix`         | String | `v`     | false    | Prefix to use before the version number. Defaults to `v`. Not required                                                                           |
+| `suffix`         | String | `''`    | false    | suffix to use after the version number. Eg `v1.2.3-'beta'`                                                                                       |
+| `replace_suffix` | String | `false` | false    | Whether the tag should copy the version number and update the suffix. Eg: `v1.2.3-beta -> v1.2.3` To be used in conjunction with `target_suffix` |
+| `target_suffix`  | String | `''`    | false    | The target suffix to assign to the tag in place of the source one. Eg `alpha -> beta or beta -> ''`                                              |
 
 ### Outputs
 
-- `updated_tag`: The newly composed tag (this action doesn't create the tag
-  itself. It just creates the formatted tag string and provides it as an output)
+> `updated_tag`: The newly composed tag (this action doesn't create the tag
+> itself. It just creates the formatted tag string and provides it as an output)
 
-## Methodology
+## Example
+
+```yaml
+name: update-tag
+on: push
+
+jobs:
+  create-release:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v5
+      - name: Create Release Tag
+        id: release_tag
+        uses: mistermaxis/update-tag-action@v2
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          bump: minor
+      - name: Create Release
+        uses: ncipollo/release-action@v1
+        with:
+          tag: ${{ steps.release_tag.outputs.updated_tag }}
+          name: Release ${{ steps.release_tag.outputs.updated_tag }}
+```
 
 ## Running the action with bump: prerelease
 
@@ -150,12 +165,12 @@ set the `y` (minor) and `z` (patch) components to zero and construct the tag
 again with the updated components and add the `suffix`, if any. Eg: `v1.2.3`
 `→ v2.0.0` or `v1.4.3 → v2.0.0-beta`
 
-## Running the action with bump: none, and copy_from: true
+## Running the action with bump: none, and replace_suffix: true
 
 - **bump: none**
 - **prefix: v**
 - **suffix: beta | null**
-- **copy_from: true**
+- **replace_suffix: true**
 
 **Searching the tag:**
 
@@ -181,12 +196,12 @@ If the tag is in the form `vx.y.z-beta`, Grab the tag and return it as is. Eg:
 If the tag is in the form `vx.y.z`, Grab the tag and append the `suffix`
 component without modifying the tag. Eg: `v0.4.0 → v0.4.0-beta`
 
-## Running the action with bump: none, copy_from: true and target_suffix: beta
+## Running the action with bump: none, replace_suffix: true and target_suffix: beta
 
 - **bump: none**
 - **prefix: v**
 - **suffix: alpha**
-- **copy_from: true**
+- **replace_suffix: true**
 - **target_suffix: beta**
 
 **Searching the tag:**
