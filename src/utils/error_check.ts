@@ -23,13 +23,13 @@ export function checkForErrors() {
     replace_suffix === true
   ) {
     throw new Error(
-      'The flag replace_suffix:true is not meant to be used with prerelease bumps'
+      'The flag replace_suffix: true is not meant to be used with prerelease bumps'
     )
   }
 
   if (replace_suffix === true && getNewSuffix() === undefined) {
     throw new Error(
-      'A new_suffix must be defined when using replace_suffix:true'
+      'A new_suffix must be defined when using replace_suffix: true'
     )
   }
 

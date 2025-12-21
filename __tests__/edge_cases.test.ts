@@ -11,7 +11,7 @@ jest.unstable_mockModule('../src/utils/list_tags.js', () => ({ listTags }))
 // mocks are used in place of any actual dependencies.
 const { run } = await import('../src/main.js')
 
-describe('Edge cases', () => {
+describe('Fail cases', () => {
   afterEach(() => {
     jest.resetAllMocks()
     jest.clearAllMocks()
@@ -35,17 +35,18 @@ describe('Edge cases', () => {
     await run()
 
     expect(core.setFailed).toHaveBeenCalledWith(
-      'Error: A new_suffix must be defined when using replace_suffix:true'
+      'Error: A new_suffix must be defined when using replace_suffix: true'
     )
   })
 
-  it('Should fail if bump is prerelease and suffix is undefined', async () => {
+  it('Should fail if bump is a prerelease bump and suffix is undefined', async () => {
     core.getInput.mockImplementation((inputName: string) => {
       const inputValues: { [key: string]: string } = {
         prefix: 'v',
-        bump: 'preminor',
-        suffix: '',
-        replace_suffix: 'false'
+        bump: 'preminor'
+        // suffix: ''
+        // replace_suffix: 'false'
+        // new_suffix: 'undefined'
       }
       return inputValues[inputName]
     })
@@ -60,13 +61,14 @@ describe('Edge cases', () => {
     )
   })
 
-  it('Should fail if bump is prerelease and replace_suffix is true', async () => {
+  it('Should fail if bump is a prerelease bump and replace_suffix is true', async () => {
     core.getInput.mockImplementation((inputName: string) => {
       const inputValues: { [key: string]: string } = {
         prefix: 'v',
         bump: 'premajor',
         suffix: 'beta',
         replace_suffix: 'true'
+        // new_suffix: 'undefined'
       }
       return inputValues[inputName]
     })
@@ -77,18 +79,203 @@ describe('Edge cases', () => {
     await run()
 
     expect(core.setFailed).toHaveBeenCalledWith(
-      'Error: The flag replace_suffix:true is not meant to be used with prerelease bumps'
+      'Error: The flag replace_suffix: true is not meant to be used with prerelease bumps'
     )
   })
+})
 
-  it('Should pick the latest existing valid version with the provided suffix and replace it with the new_suffix', async () => {
+describe('Cases where there is suffix input but the latest version might have no suffix', () => {
+  afterEach(() => {
+    jest.resetAllMocks()
+    jest.clearAllMocks()
+  })
+
+  it('If the latest version has a suffix, use that version to update', async () => {
     core.getInput.mockImplementation((inputName: string) => {
       const inputValues: { [key: string]: string } = {
         prefix: 'v',
-        bump: 'none',
+        bump: 'premajor',
+        suffix: 'beta'
+        // new_suffix: 'undefined',
+        // replace_suffix: 'false'
+      }
+      return inputValues[inputName]
+    })
+
+    const mockVersionTag: VersionTag[] = [
+      {
+        fullTag: 'v1.2.3',
+        prefix: 'v',
+        tagName: '1.2.3',
+        suffix: 'beta',
+        number: {
+          major: 1,
+          minor: 2,
+          patch: 3
+        }
+      },
+      {
+        fullTag: 'v2.3.4-beta',
+        prefix: 'v',
+        tagName: '2.3.4',
+        suffix: 'beta',
+        prerelease_number: undefined,
+        number: {
+          major: 2,
+          minor: 3,
+          patch: 4,
+          prerelease: undefined
+        }
+      }
+    ]
+    listTags.mockImplementation(() => Promise.resolve(mockVersionTag))
+
+    await run()
+
+    // Verify the time output was set.
+    expect(core.setOutput).toHaveBeenCalledWith('updated_tag', 'v3.0.0-beta.1')
+  })
+
+  it('If the latest version has no suffix, use that version to update', async () => {
+    core.getInput.mockImplementation((inputName: string) => {
+      const inputValues: { [key: string]: string } = {
+        prefix: 'v',
+        bump: 'premajor',
+        suffix: 'beta'
+        // new_suffix: 'undefined',
+        // replace_suffix: 'false'
+      }
+      return inputValues[inputName]
+    })
+
+    const mockVersionTag: VersionTag[] = [
+      {
+        fullTag: 'v1.2.3-beta',
+        prefix: 'v',
+        tagName: '1.2.3',
+        suffix: 'beta',
+        number: {
+          major: 1,
+          minor: 2,
+          patch: 3
+        }
+      },
+      {
+        fullTag: 'v2.3.4',
+        prefix: 'v',
+        tagName: '2.3.4',
+        suffix: 'beta',
+        prerelease_number: undefined,
+        number: {
+          major: 2,
+          minor: 3,
+          patch: 4,
+          prerelease: undefined
+        }
+      }
+    ]
+    listTags.mockImplementation(() => Promise.resolve(mockVersionTag))
+
+    await run()
+
+    // Verify the time output was set.
+    expect(core.setOutput).toHaveBeenCalledWith('updated_tag', 'v3.0.0-beta.1')
+  })
+})
+
+describe('Replace the suffix with a new suffix', () => {
+  afterEach(() => {
+    jest.resetAllMocks()
+    jest.clearAllMocks()
+  })
+
+  it('If the new_suffix is an empty string, remove the existing suffix', async () => {
+    core.getInput.mockImplementation((inputName: string) => {
+      const inputValues: { [key: string]: string } = {
+        prefix: 'v',
+        bump: 'major',
+        suffix: 'beta',
+        replace_suffix: 'true',
+        new_suffix: ''
+      }
+      return inputValues[inputName]
+    })
+
+    const mockVersionTag: VersionTag[] = [
+      {
+        fullTag: 'v2.3.4-beta',
+        prefix: 'v',
+        tagName: '2.3.4',
+        suffix: 'beta',
+        prerelease_number: undefined,
+        number: {
+          major: 2,
+          minor: 3,
+          patch: 4,
+          prerelease: undefined
+        }
+      }
+    ]
+    listTags.mockImplementation(() => Promise.resolve(mockVersionTag))
+
+    await run()
+
+    // Verify the time output was set.
+    expect(core.setOutput).toHaveBeenCalledWith('updated_tag', 'v3.0.0')
+  })
+
+  it('If the suffix is an empty string, add the new_suffix', async () => {
+    core.getInput.mockImplementation((inputName: string) => {
+      const inputValues: { [key: string]: string } = {
+        prefix: 'v',
+        bump: 'major',
+        suffix: '',
+        replace_suffix: 'true',
+        new_suffix: 'beta'
+      }
+      return inputValues[inputName]
+    })
+
+    const mockVersionTag: VersionTag[] = [
+      {
+        fullTag: 'v1.2.3',
+        prefix: 'v',
+        tagName: '1.2.3',
+        suffix: 'beta',
+        number: {
+          major: 1,
+          minor: 2,
+          patch: 3
+        }
+      },
+      {
+        fullTag: 'v2.3.4',
+        prefix: 'v',
+        tagName: '2.3.4',
+        suffix: 'beta',
+        number: {
+          major: 2,
+          minor: 3,
+          patch: 4
+        }
+      }
+    ]
+    listTags.mockImplementation(() => Promise.resolve(mockVersionTag))
+
+    await run()
+
+    // Verify the time output was set.
+    expect(core.setOutput).toHaveBeenCalledWith('updated_tag', 'v3.0.0-beta')
+  })
+
+  it('If neither the suffix or the new_suffix are empty strings, replace the suffix with the new_suffix', async () => {
+    core.getInput.mockImplementation((inputName: string) => {
+      const inputValues: { [key: string]: string } = {
+        prefix: 'v',
+        bump: 'major',
         suffix: 'alpha',
-        new_suffix: 'beta',
-        replace_suffix: 'true'
+        replace_suffix: 'true',
+        new_suffix: 'beta'
       }
       return inputValues[inputName]
     })
@@ -122,153 +309,26 @@ describe('Edge cases', () => {
     await run()
 
     // Verify the time output was set.
-    expect(core.setOutput).toHaveBeenCalledWith('updated_tag', 'v2.3.4-beta')
+    expect(core.setOutput).toHaveBeenCalledWith('updated_tag', 'v3.0.0-beta')
   })
 
-  it('Should return v0.0.0 as the latest tag and update its minor version', async () => {
+  it('If there are no valid tags, return 0.0.0 and add the new_suffix', async () => {
     core.getInput.mockImplementation((inputName: string) => {
       const inputValues: { [key: string]: string } = {
         prefix: 'v',
-        bump: 'minor',
-        suffix: '',
-        new_suffix: '',
-        replace_suffix: 'false'
+        bump: 'none',
+        suffix: 'alpha',
+        replace_suffix: 'true',
+        new_suffix: 'beta'
       }
       return inputValues[inputName]
     })
 
-    const mockVersionTag: VersionTag[] = []
-    listTags.mockImplementation(() => Promise.resolve(mockVersionTag))
+    listTags.mockImplementation(() => Promise.resolve([]))
 
     await run()
 
     // Verify the time output was set.
-    expect(core.setOutput).toHaveBeenCalledWith('updated_tag', 'v0.1.0')
-  })
-
-  it('Should return v0.0.0 as the latest tag and update its minor version and add the suffix and prerelease number', async () => {
-    core.getInput.mockImplementation((inputName: string) => {
-      const inputValues: { [key: string]: string } = {
-        prefix: 'v',
-        bump: 'preminor',
-        suffix: 'beta',
-        new_suffix: '',
-        replace_suffix: 'false'
-      }
-      return inputValues[inputName]
-    })
-
-    const mockVersionTag: VersionTag[] = []
-    listTags.mockImplementation(() => Promise.resolve(mockVersionTag))
-
-    await run()
-
-    // Verify the time output was set.
-    expect(core.setOutput).toHaveBeenCalledWith('updated_tag', 'v0.1.0-beta.1')
-  })
-
-  it('Should pick the latest existing valid version with or without the suffix', async () => {
-    core.getInput.mockImplementation((inputName: string) => {
-      const inputValues: { [key: string]: string } = {
-        prefix: 'v',
-        bump: 'premajor',
-        suffix: 'beta',
-        new_suffix: '',
-        replace_suffix: 'false'
-      }
-      return inputValues[inputName]
-    })
-
-    const mockVersionTag: VersionTag[] = [
-      {
-        fullTag: 'v1.2.3-beta.2',
-        prefix: 'v',
-        tagName: '1.2.3',
-        suffix: 'beta',
-        prerelease_number: '2',
-        number: {
-          major: 1,
-          minor: 2,
-          patch: 3,
-          prerelease: 2
-        }
-      },
-      {
-        fullTag: 'v1.2.3-beta',
-        prefix: 'v',
-        tagName: '1.2.3',
-        suffix: 'beta',
-        prerelease_number: undefined,
-        number: {
-          major: 1,
-          minor: 2,
-          patch: 3,
-          prerelease: undefined
-        }
-      },
-      {
-        fullTag: 'v2.3.4',
-        prefix: 'v',
-        tagName: '2.3.4',
-        suffix: 'beta',
-        prerelease_number: undefined,
-        number: {
-          major: 2,
-          minor: 3,
-          patch: 4,
-          prerelease: undefined
-        }
-      }
-    ]
-    listTags.mockImplementation(() => Promise.resolve(mockVersionTag))
-
-    await run()
-
-    // Verify the time output was set.
-    expect(core.setOutput).toHaveBeenCalledWith('updated_tag', 'v3.0.0-beta.1')
-  })
-
-  it('Should update the tag without prefix or suffix', async () => {
-    core.getInput.mockImplementation((inputName: string) => {
-      const inputValues: { [key: string]: string } = {
-        prefix: '',
-        bump: 'minor',
-        suffix: '',
-        new_suffix: '',
-        replace_suffix: 'false'
-      }
-      return inputValues[inputName]
-    })
-
-    const mockVersionTag: VersionTag[] = [
-      {
-        fullTag: '1.2.3',
-        prefix: '',
-        tagName: '1.2.3',
-        suffix: '',
-        number: {
-          major: 1,
-          minor: 2,
-          patch: 3
-        }
-      },
-      {
-        fullTag: '2.3.4',
-        prefix: '',
-        tagName: '2.3.4',
-        suffix: '',
-        number: {
-          major: 2,
-          minor: 3,
-          patch: 4
-        }
-      }
-    ]
-    listTags.mockImplementation(() => Promise.resolve(mockVersionTag))
-
-    await run()
-
-    // Verify the time output was set.
-    expect(core.setOutput).toHaveBeenCalledWith('updated_tag', '2.4.0')
+    expect(core.setOutput).toHaveBeenCalledWith('updated_tag', 'v0.0.0-beta')
   })
 })

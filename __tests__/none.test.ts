@@ -36,7 +36,7 @@ describe('None bump', () => {
         fullTag: 'v1.2.3',
         prefix: 'v',
         tagName: '1.2.3',
-        suffix: 'beta',
+        suffix: '',
         number: {
           major: 1,
           minor: 2,
@@ -47,7 +47,7 @@ describe('None bump', () => {
         fullTag: 'v2.3.4',
         prefix: 'v',
         tagName: '2.3.4',
-        suffix: 'beta',
+        suffix: '',
         number: {
           major: 2,
           minor: 3,
@@ -131,5 +131,14 @@ describe('None bump', () => {
 
     // Verify the time output was set.
     expect(core.setOutput).toHaveBeenCalledWith('updated_tag', 'v1.2.3-beta.2')
+  })
+
+  it('Should return v0.0.0-`${suffix}` when there are no valid tags', async () => {
+    listTags.mockImplementation(() => Promise.resolve([]))
+
+    await run()
+
+    // Verify the time output was set.
+    expect(core.setOutput).toHaveBeenCalledWith('updated_tag', 'v0.0.0-beta')
   })
 })
