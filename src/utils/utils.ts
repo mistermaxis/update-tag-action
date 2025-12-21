@@ -110,7 +110,7 @@ export function fullTagFromObject(tag: VersionTag): string {
   const new_suffix: string | undefined = getNewSuffix()
 
   if (replace_suffix) {
-    version_suffix = `-${new_suffix}`
+    version_suffix = new_suffix ? `-${new_suffix}` : ''
   } else {
     version_suffix = tag.suffix ? `-${tag.suffix}` : ''
   }
