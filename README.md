@@ -63,13 +63,13 @@ jobs:
 
 ## References
 
-- ### Repositories
+### Repositories
 
-  - [get-labels-action(SamirMarin)](https://github.com/SamirMarin/get-labels-action)
-  - [github-tag-action(mathieudutour)](https://github.com/mathieudutour/github-tag-action)
-  - [typescript-action(public template)](https://github.com/actions/typescript-action)
+- [get-labels-action(SamirMarin)](https://github.com/SamirMarin/get-labels-action)
+- [github-tag-action(mathieudutour)](https://github.com/mathieudutour/github-tag-action)
+- [typescript-action(public template)](https://github.com/actions/typescript-action)
 
-- ### Videos
-  
-  - [Automate GitHub Releases with GitHub Actions | Full Example (SamirMarin)](https://www.youtube.com/watch?v=zU6kagsFuJo)
-  - [Complete GitHub Actions Course - From BEGINNER to PRO (DevOps Directive)](https://www.youtube.com/watch?v=Xwpi0ITkL3U)
+### Videos
+
+- [Automate GitHub Releases with GitHub Actions | Full Example (SamirMarin)](https://www.youtube.com/watch?v=zU6kagsFuJo)
+- [Complete GitHub Actions Course - From BEGINNER to PRO (DevOps Directive)](https://www.youtube.com/watch?v=Xwpi0ITkL3U)
