@@ -1,6 +1,6 @@
 # Examples with edge cases
 
-## The action should fail if `replace_suffix` is true and `new_suffix` is undefined
+## The action fails if `replace_suffix` is true and `new_suffix` is undefined
 
 ```yaml
 name: update-tag
@@ -33,7 +33,7 @@ jobs:
 | ------------ | --------------------------------------------------------------------- |
 | Any Tag      | `Error: A new_suffix must be defined when using replace_suffix: true` |
 
-## The action should fail if `bump: [premajor, preminor, prepatch]` and `suffix` is undefined
+## The action fails if a prerelease bump is used and `suffix` is undefined
 
 ```yaml
 name: update-tag
@@ -66,7 +66,7 @@ jobs:
 | ------------ | ---------------------------------------------------- |
 | Any Tag      | `Error: Prerelease bumps must be used with a suffix` |
 
-## The action should fail if `bump: [premajor, preminor, prepatch]` and `replace_suffix` is true
+## The action fails if a prerelease bump is used and `replace_suffix` is true
 
 ```yaml
 name: update-tag
@@ -204,7 +204,7 @@ jobs:
 | `v1.2.3-alpha` | `v0.0.0-beta` |
 | `null`         | `v0.0.0-beta` |
 
-## In case there is a suffix defined, the action will pick the latest valid version even if it has no suffix
+## The action will pick the latest tag, with or without a suffix
 
 ```yaml
 name: update-tag
