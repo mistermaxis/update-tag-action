@@ -1,4 +1,4 @@
-# Examples with ```bump: [premajor, preminor, prepatch]```
+# Examples with `bump: [premajor, preminor, prepatch]`
 
 ## Premajor Bump
 
