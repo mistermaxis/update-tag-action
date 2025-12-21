@@ -65,9 +65,10 @@ jobs:
 
 ### Repositories
 
-- [get-labels-action(SamirMarin)](https://github.com/SamirMarin/get-labels-action)
-- [github-tag-action(mathieudutour)](https://github.com/mathieudutour/github-tag-action)
-- [typescript-action(public template)](https://github.com/actions/typescript-action)
+- [get-labels-action (SamirMarin)](https://github.com/SamirMarin/get-labels-action)
+- [github-tag-action (mathieudutour)](https://github.com/mathieudutour/github-tag-action)
+- [typescript-action (public template)](https://github.com/actions/typescript-action)
+- [release-action (ncipollo)](https://github.com/ncipollo/release-action)
 
 ### Videos
 
