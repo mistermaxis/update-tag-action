@@ -60,3 +60,16 @@ jobs:
 [Examples With Bump: None](EXAMPLES_NONE.md)
 
 [Examples With Edge Cases](EXAMPLES_EDGE_CASES.md)
+
+## References
+
+- ### Repositories
+
+  - [get-labels-action(SamirMarin)](https://github.com/SamirMarin/get-labels-action)
+  - [github-tag-action(mathieudutour)](https://github.com/mathieudutour/github-tag-action)
+  - [typescript-action(public template)](https://github.com/actions/typescript-action)
+
+- ### Videos
+  
+  - [Automate GitHub Releases with GitHub Actions | Full Example (SamirMarin)](https://www.youtube.com/watch?v=zU6kagsFuJo)
+  - [Complete GitHub Actions Course - From BEGINNER to PRO (DevOps Directive)](https://www.youtube.com/watch?v=Xwpi0ITkL3U)
