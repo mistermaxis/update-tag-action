@@ -32374,7 +32374,7 @@ function fullTagFromObject(tag) {
     const replace_suffix = getReplaceSuffix();
     const new_suffix = getNewSuffix();
     if (replace_suffix) {
-        version_suffix = `-${new_suffix}`;
+        version_suffix = new_suffix ? `-${new_suffix}` : '';
     }
     else {
         version_suffix = tag.suffix ? `-${tag.suffix}` : '';
@@ -32605,10 +32605,10 @@ function checkForErrors() {
         bump === BumpType.PREMINOR ||
         bump === BumpType.PREPATCH) &&
         replace_suffix === true) {
-        throw new Error('The flag replace_suffix:true is not meant to be used with prerelease bumps');
+        throw new Error('The flag replace_suffix: true is not meant to be used with prerelease bumps');
     }
     if (replace_suffix === true && getNewSuffix() === undefined) {
-        throw new Error('A new_suffix must be defined when using replace_suffix:true');
+        throw new Error('A new_suffix must be defined when using replace_suffix: true');
     }
     if (suffix && replace_suffix === true) {
         coreExports.warning('If there is no tag with the provided suffix, replace_suffix is unnecessary');
