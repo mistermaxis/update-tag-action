@@ -2,7 +2,7 @@
 
 ## Grab the latest tag in your repository and update it
 
-### An action to update a version tag using semver formatting
+### An action to update a version tag using SemVer formatting
 
 [![GitHub Super-Linter](https://github.com/mistermaxis/update-tag-action/actions/workflows/linter.yml/badge.svg)](https://github.com/super-linter/super-linter)
 ![CI](https://github.com/mistermaxis/update-tag-action/actions/workflows/ci.yml/badge.svg)
