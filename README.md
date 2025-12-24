@@ -14,11 +14,11 @@
 
 | Name             | Type   | Default       | Required | Description                                                                                                                                   |
 | :--------------- | ------ | ------------- | -------- | --------------------------------------------------------------------------------------------------------------------------------------------- |
-| `bump`           | String | `none`        | false    | The type of bump. Can be major, minor, patch, prerelease or none. Defaults to `none`, Not required                                            |
+| `bump`           | String | `none`        | false    | The type of bump. Can be major, minor, patch, premajor, preminor, prepatch or none. Defaults to `none`, Not required                                            |
 | `prefix`         | String | `v`           | false    | Prefix to use before the version number. Defaults to `v`. Not required                                                                        |
-| `suffix`         | String | `''`          | false    | suffix to use after the version number. Eg `v1.2.3-'beta'`                                                                                    |
+| `suffix`         | String | `''`          | false    | suffix to use after the version number. Eg: `v1.2.3-'beta'`                                                                                    |
 | `replace_suffix` | String | `false`       | false    | Whether the tag should copy the version number and update the suffix. Eg: `v1.2.3-beta -> v1.2.3` To be used in conjunction with `new_suffix` |
-| `new_suffix`     | String | `'undefined'` | false    | The target suffix to assign to the tag in place of the source one. Eg `alpha -> beta or beta -> ''`                                           |
+| `new_suffix`     | String | `'undefined'` | false    | The target suffix to assign to the tag in place of the source one. Eg: `alpha -> beta or beta -> ''`                                           |
 | `github_token`   | String | `''`          | true     | The GitHub token secret                                                                                                                       |
 
 ### Outputs
