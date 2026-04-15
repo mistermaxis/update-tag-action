@@ -22,6 +22,13 @@
   "engines": {
     "node": ">=24.0.0"
   },
+  "overrides": {
+    "@octokit/plugin-paginate-rest": "^14.0.0",
+    "minimatch": "^10.2.4",
+    "undici": "^7.22.0",
+    "@octokit/request": "^10.0.8",
+    "@octokit/request-error": "^7.1.0"
+  },
   "scripts": {
     "bundle": "npm run format:write && npm run package",
     "ci-test": "NODE_OPTIONS=--experimental-vm-modules NODE_NO_WARNINGS=1 npx jest",
@@ -37,12 +44,15 @@
   },
   "license": "MIT",
   "dependencies": {
-    "@actions/core": "^2.0.0"
+    "@actions/core": "^3.0.0"
   },
   "devDependencies": {
     "@eslint/compat": "^2.0.1",
-    "@github/local-action": "^7.0.0",
+    "@github/local-action": "^7.0.1",
     "@jest/globals": "^30.2.0",
+    "@octokit/plugin-paginate-rest": "^14.0.0",
+    "@octokit/request": "^10.0.8",
+    "@octokit/request-error": "^7.1.0",
     "@rollup/plugin-commonjs": "^29.0.0",
     "@rollup/plugin-node-resolve": "^16.0.1",
     "@rollup/plugin-typescript": "^12.1.4",
@@ -51,7 +61,7 @@
     "@types/sinon": "^21.0.0",
     "@typescript-eslint/eslint-plugin": "^8.52.0",
     "@typescript-eslint/parser": "^8.32.1",
-    "eslint": "^9.36.0",
+    "eslint": "^9.0.0",
     "eslint-config-prettier": "^10.1.8",
     "eslint-import-resolver-typescript": "^4.4.4",
     "eslint-plugin-import": "^2.32.0",
@@ -59,14 +69,15 @@
     "eslint-plugin-prettier": "^5.5.4",
     "jest": "^30.2.0",
     "make-coverage-badge": "^1.2.0",
+    "minimatch": "^10.2.4",
     "prettier": "^3.7.4",
-    "prettier-eslint": "^16.4.2",
+    "prettier-eslint": "^16.3.0",
     "rollup": "^4.55.1",
     "sinon": "^21.0.1",
     "ts-jest": "^29.4.6",
     "ts-jest-resolver": "^2.0.1",
     "typescript": "^5.9.3",
-    "undici": "^7.18.2"
+    "undici": "^7.24.0"
   },
   "optionalDependencies": {
     "@rollup/rollup-linux-x64-gnu": "*"
