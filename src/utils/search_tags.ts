@@ -9,19 +9,15 @@ import { maxVersion, versionRegex } from './utils.js'
  * @returns {VersionTag} { fullTag: 'v2.3.4-beta.3' }
  */
 export function searchPrerelease(tagList: VersionTag[]): VersionTag {
-  let prerelease_list: VersionTag[] = []
-  let with_suffix_list: VersionTag[] = []
-  let no_suffix_list: VersionTag[] = []
-
-  prerelease_list = tagList.filter((tag) =>
+  const prerelease_list: VersionTag[] = tagList.filter((tag) =>
     versionRegex(SearchType.PRERELEASE).test(tag.fullTag)
   )
 
-  with_suffix_list = tagList.filter((tag) =>
+  const with_suffix_list: VersionTag[] = tagList.filter((tag) =>
     versionRegex(SearchType.WITH_SUFFIX).test(tag.fullTag)
   )
 
-  no_suffix_list = tagList.filter((tag) =>
+  const no_suffix_list: VersionTag[] = tagList.filter((tag) =>
     versionRegex(SearchType.NO_SUFFIX).test(tag.fullTag)
   )
 
@@ -41,8 +37,8 @@ export function searchPrerelease(tagList: VersionTag[]): VersionTag {
  * @returns {VersionTag} { fullTag: 'v2.3.4-beta' }
  */
 export function searchBase(tagList: VersionTag[]): VersionTag {
-  let suffix_list: VersionTag[] = []
-  let no_suffix_list: VersionTag[] = []
+  let suffix_list: VersionTag[]
+  let no_suffix_list: VersionTag[]
 
   if (getSuffix() === '') {
     no_suffix_list = tagList.filter((tag) =>
