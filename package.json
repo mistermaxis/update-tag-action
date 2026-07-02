@@ -24,7 +24,8 @@
   },
   "overrides": {
     "@actions/github": "^9.1.1",
-    "@actions/http-client": "^4.0.1"
+    "@actions/http-client": "^4.0.1",
+    "@emnapi/core": "1.11.1"
   },
   "scripts": {
     "bundle": "npm run format:write && npm run package",
@@ -44,6 +45,8 @@
     "@actions/core": "^3.0.0"
   },
   "devDependencies": {
+    "@actions/github": "^9.1.1",
+    "@actions/http-client": "^4.0.1",
     "@eslint/compat": "^2.0.1",
     "@eslint/eslintrc": "^3.3.5",
     "@eslint/js": "10.0.1",
@@ -55,8 +58,6 @@
     "@types/jest": "^30.0.0",
     "@types/node": "^26.1.0",
     "@typescript-eslint/eslint-plugin": "^8.52.0",
-    "@actions/github": "^9.1.1",
-    "@actions/http-client": "^4.0.1",
     "eslint": "^10.2.1",
     "eslint-config-prettier": "^10.1.8",
     "eslint-plugin-jest": "^29.12.1",
