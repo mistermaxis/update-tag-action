@@ -25,7 +25,10 @@
   "overrides": {
     "@actions/github": "^9.1.1",
     "@actions/http-client": "^4.0.1",
-    "@emnapi/core": "1.11.1"
+    "@emnapi/core": "1.11.1",
+    "@actions/http-client": {
+      "undici": "6.28.0"
+    }
   },
   "scripts": {
     "bundle": "npm run format:write && npm run package",
