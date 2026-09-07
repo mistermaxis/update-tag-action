@@ -4,10 +4,8 @@ import * as crypto from 'crypto';
 import * as fs from 'fs';
 import { promises, existsSync, readFileSync } from 'fs';
 import 'path';
-import * as http from 'http';
-import http__default from 'http';
-import * as https from 'https';
-import https__default from 'https';
+import http from 'http';
+import https from 'https';
 import 'net';
 import require$$1 from 'tls';
 import events$2 from 'events';
@@ -186,96 +184,6 @@ function prepareKeyValueMessage(key, value) {
     return `${key}<<${delimiter}${os.EOL}${convertedValue}${os.EOL}${delimiter}`;
 }
 
-function getProxyUrl(reqUrl) {
-    const usingSsl = reqUrl.protocol === 'https:';
-    if (checkBypass(reqUrl)) {
-        return undefined;
-    }
-    const proxyVar = (() => {
-        if (usingSsl) {
-            return process.env['https_proxy'] || process.env['HTTPS_PROXY'];
-        }
-        else {
-            return process.env['http_proxy'] || process.env['HTTP_PROXY'];
-        }
-    })();
-    if (proxyVar) {
-        try {
-            return new DecodedURL(proxyVar);
-        }
-        catch (_a) {
-            if (!proxyVar.startsWith('http://') && !proxyVar.startsWith('https://'))
-                return new DecodedURL(`http://${proxyVar}`);
-        }
-    }
-    else {
-        return undefined;
-    }
-}
-function checkBypass(reqUrl) {
-    if (!reqUrl.hostname) {
-        return false;
-    }
-    const reqHost = reqUrl.hostname;
-    if (isLoopbackAddress(reqHost)) {
-        return true;
-    }
-    const noProxy = process.env['no_proxy'] || process.env['NO_PROXY'] || '';
-    if (!noProxy) {
-        return false;
-    }
-    // Determine the request port
-    let reqPort;
-    if (reqUrl.port) {
-        reqPort = Number(reqUrl.port);
-    }
-    else if (reqUrl.protocol === 'http:') {
-        reqPort = 80;
-    }
-    else if (reqUrl.protocol === 'https:') {
-        reqPort = 443;
-    }
-    // Format the request hostname and hostname with port
-    const upperReqHosts = [reqUrl.hostname.toUpperCase()];
-    if (typeof reqPort === 'number') {
-        upperReqHosts.push(`${upperReqHosts[0]}:${reqPort}`);
-    }
-    // Compare request host against noproxy
-    for (const upperNoProxyItem of noProxy
-        .split(',')
-        .map(x => x.trim().toUpperCase())
-        .filter(x => x)) {
-        if (upperNoProxyItem === '*' ||
-            upperReqHosts.some(x => x === upperNoProxyItem ||
-                x.endsWith(`.${upperNoProxyItem}`) ||
-                (upperNoProxyItem.startsWith('.') &&
-                    x.endsWith(`${upperNoProxyItem}`)))) {
-            return true;
-        }
-    }
-    return false;
-}
-function isLoopbackAddress(host) {
-    const hostLower = host.toLowerCase();
-    return (hostLower === 'localhost' ||
-        hostLower.startsWith('127.') ||
-        hostLower.startsWith('[::1]') ||
-        hostLower.startsWith('[0:0:0:0:0:0:0:1]'));
-}
-class DecodedURL extends URL {
-    constructor(url, base) {
-        super(url, base);
-        this._decodedUsername = decodeURIComponent(super.username);
-        this._decodedPassword = decodeURIComponent(super.password);
-    }
-    get username() {
-        return this._decodedUsername;
-    }
-    get password() {
-        return this._decodedPassword;
-    }
-}
-
 var commonjsGlobal = typeof globalThis !== 'undefined' ? globalThis : typeof window !== 'undefined' ? window : typeof global !== 'undefined' ? global : typeof self !== 'undefined' ? self : {};
 
 var tunnel$1 = {};
@@ -286,8 +194,8 @@ function requireTunnel$1 () {
 	if (hasRequiredTunnel$1) return tunnel$1;
 	hasRequiredTunnel$1 = 1;
 	var tls = require$$1;
-	var http = http__default;
-	var https = https__default;
+	var http$1 = http;
+	var https$1 = https;
 	var events = events$2;
 	var util = require$$6;
 
@@ -300,13 +208,13 @@ function requireTunnel$1 () {
 
 	function httpOverHttp(options) {
 	  var agent = new TunnelingAgent(options);
-	  agent.request = http.request;
+	  agent.request = http$1.request;
 	  return agent;
 	}
 
 	function httpsOverHttp(options) {
 	  var agent = new TunnelingAgent(options);
-	  agent.request = http.request;
+	  agent.request = http$1.request;
 	  agent.createSocket = createSecureSocket;
 	  agent.defaultPort = 443;
 	  return agent;
@@ -314,13 +222,13 @@ function requireTunnel$1 () {
 
 	function httpOverHttps(options) {
 	  var agent = new TunnelingAgent(options);
-	  agent.request = https.request;
+	  agent.request = https$1.request;
 	  return agent;
 	}
 
 	function httpsOverHttps(options) {
 	  var agent = new TunnelingAgent(options);
-	  agent.request = https.request;
+	  agent.request = https$1.request;
 	  agent.createSocket = createSecureSocket;
 	  agent.defaultPort = 443;
 	  return agent;
@@ -331,7 +239,7 @@ function requireTunnel$1 () {
 	  var self = this;
 	  self.options = options || {};
 	  self.proxyOptions = self.options.proxy || {};
-	  self.maxSockets = self.options.maxSockets || http.Agent.defaultMaxSockets;
+	  self.maxSockets = self.options.maxSockets || http$1.Agent.defaultMaxSockets;
 	  self.requests = [];
 	  self.sockets = [];
 
@@ -558,7 +466,7 @@ function requireTunnel () {
 	return tunnel;
 }
 
-var tunnelExports = requireTunnel();
+requireTunnel();
 
 var undici$1 = {};
 
@@ -2651,7 +2559,13 @@ function requireRequest$3 () {
 	      } else if (typeof val[i] === 'object') {
 	        throw new InvalidArgumentError(`invalid ${key} header`)
 	      } else {
-	        arr.push(`${val[i]}`);
+	        // Coerce primitives (and reject unsafe coercions such as functions
+	        // with a crafted toString/Symbol.toPrimitive).
+	        const str = `${val[i]}`;
+	        if (!isValidHeaderValue(str)) {
+	          throw new InvalidArgumentError(`invalid ${key} header`)
+	        }
+	        arr.push(str);
 	      }
 	    }
 	    val = arr;
@@ -2662,7 +2576,12 @@ function requireRequest$3 () {
 	  } else if (val === null) {
 	    val = '';
 	  } else {
+	    // Coerce primitives (and reject unsafe coercions such as functions
+	    // with a crafted toString/Symbol.toPrimitive).
 	    val = `${val}`;
+	    if (!isValidHeaderValue(val)) {
+	      throw new InvalidArgumentError(`invalid ${key} header`)
+	    }
 	  }
 
 	  if (headerName === 'host') {
@@ -8718,6 +8637,7 @@ function requireClientH1$1 () {
 	  RequestContentLengthMismatchError,
 	  ResponseContentLengthMismatchError,
 	  RequestAbortedError,
+	  InvalidArgumentError,
 	  HeadersTimeoutError,
 	  HeadersOverflowError,
 	  SocketError,
@@ -9583,7 +9503,7 @@ function requireClientH1$1 () {
 
 	function clearIdleSocketValidation (socket) {
 	  if (socket[kIdleSocketValidationTimeout]) {
-	    clearTimeout(socket[kIdleSocketValidationTimeout]);
+	    clearImmediate(socket[kIdleSocketValidationTimeout]);
 	    socket[kIdleSocketValidationTimeout] = null;
 	  }
 
@@ -9592,15 +9512,23 @@ function requireClientH1$1 () {
 
 	function scheduleIdleSocketValidation (client, socket) {
 	  socket[kIdleSocketValidation] = 1;
-	  socket[kIdleSocketValidationTimeout] = setTimeout(() => {
+	  // Yield to the check phase (after poll) so unsolicited bytes / FIN / RST
+	  // already pending on this idle keep-alive socket are processed before the
+	  // next request is written (GHSA-35p6-xmwp-9g52).
+	  //
+	  // setTimeout(0) pays Node's ~1ms timer floor on every sequential reuse
+	  // (#5493). setImmediate avoids that, but an *unref'd* Immediate lets poll
+	  // block for ~500ms when the event loop is otherwise idle (#5600 / #5606).
+	  // A ref'd Immediate both keeps the pending request alive and makes poll
+	  // return immediately — the hybrid those issues asked for.
+	  socket[kIdleSocketValidationTimeout] = setImmediate(() => {
 	    socket[kIdleSocketValidationTimeout] = null;
 	    socket[kIdleSocketValidation] = 2;
 
 	    if (client[kSocket] === socket && !socket.destroyed) {
 	      client[kResume]();
 	    }
-	  }, 0);
-	  socket[kIdleSocketValidationTimeout].unref?.();
+	  });
 	}
 
 	/**
@@ -9701,8 +9629,16 @@ function requireClientH1$1 () {
 	    }
 	    body = bodyStream.stream;
 	    contentLength = bodyStream.length;
-	  } else if (util.isBlobLike(body) && request.contentType == null && body.type) {
-	    headers.push('content-type', body.type);
+	  } else if (util.isBlobLike(body) && request.contentType == null) {
+	    const contentType = body.type;
+	    if (contentType) {
+	      const contentTypeValue = `${contentType}`;
+	      if (!util.isValidHeaderValue(contentTypeValue)) {
+	        util.errorRequest(client, request, new InvalidArgumentError('invalid content-type header'));
+	        return false
+	      }
+	      headers.push('content-type', contentTypeValue);
+	    }
 	  }
 
 	  if (body && typeof body.read === 'function') {
@@ -13137,6 +13073,28 @@ function requireRetryHandler$1 () {
 	  return new Date(retryAfter).getTime() - current
 	}
 
+	function validatePartialResponseContentLength (headers, range, statusCode, retryCount) {
+	  const contentLength = headers['content-length'];
+	  if (contentLength == null) {
+	    return null
+	  }
+
+	  if (!Number.isFinite(range.start) || !Number.isFinite(range.end)) {
+	    return null
+	  }
+
+	  const length = Number(contentLength);
+	  const expectedLength = range.end - range.start + 1;
+	  if (!Number.isFinite(length) || length !== expectedLength) {
+	    return new RequestRetryError('Content-Length mismatch', statusCode, {
+	      headers,
+	      data: { count: retryCount }
+	    })
+	  }
+
+	  return null
+	}
+
 	class RetryHandler {
 	  constructor (opts, handlers) {
 	    const { retryOptions, ...dispatchOpts } = opts;
@@ -13190,6 +13148,7 @@ function requireRetryHandler$1 () {
 	    this.end = null;
 	    this.etag = null;
 	    this.resume = null;
+	    this.headersSent = false;
 
 	    // Handle possible onConnect duplication
 	    this.handler.onConnect(reason => {
@@ -13200,6 +13159,20 @@ function requireRetryHandler$1 () {
 	        this.reason = reason;
 	      }
 	    });
+	  }
+
+	  checkpointResponseEnd (headers, resume) {
+	    if (this.end == null && this.opts.method !== 'HEAD') {
+	      const contentLength = headers['content-length'];
+	      this.end = contentLength != null ? Number(contentLength) - 1 : null;
+
+	      assert(
+	        this.end == null || Number.isFinite(this.end),
+	        'invalid content-length'
+	      );
+	    }
+
+	    this.resume = this.end != null ? resume : null;
 	  }
 
 	  onRequestSent () {
@@ -13291,6 +13264,8 @@ function requireRetryHandler$1 () {
 
 	    if (statusCode >= 300) {
 	      if (this.retryOpts.statusCodes.includes(statusCode) === false) {
+	        this.headersSent = true;
+	        this.checkpointResponseEnd(headers, resume);
 	        return this.handler.onHeaders(
 	          statusCode,
 	          rawHeaders,
@@ -13351,10 +13326,23 @@ function requireRetryHandler$1 () {
 	        return false
 	      }
 
+	      const contentLengthError = validatePartialResponseContentLength(headers, contentRange, statusCode, this.retryCount);
+	      if (contentLengthError != null) {
+	        this.abort(contentLengthError);
+	        return false
+	      }
+
 	      const { start, size, end = size - 1 } = contentRange;
 
-	      assert(this.start === start, 'content-range mismatch');
-	      assert(this.end == null || this.end === end, 'content-range mismatch');
+	      if (this.start !== start || (this.end != null && this.end !== end)) {
+	        this.abort(
+	          new RequestRetryError('Content-Range mismatch', statusCode, {
+	            headers,
+	            data: { count: this.retryCount }
+	          })
+	        );
+	        return false
+	      }
 
 	      this.resume = resume;
 	      return true
@@ -13366,12 +13354,19 @@ function requireRetryHandler$1 () {
 	        const range = parseRangeHeader(headers['content-range']);
 
 	        if (range == null) {
+	          this.headersSent = true;
 	          return this.handler.onHeaders(
 	            statusCode,
 	            rawHeaders,
 	            resume,
 	            statusMessage
 	          )
+	        }
+
+	        const contentLengthError = validatePartialResponseContentLength(headers, range, statusCode, this.retryCount);
+	        if (contentLengthError != null) {
+	          this.abort(contentLengthError);
+	          return false
 	        }
 
 	        const { start, size, end = size - 1 } = range;
@@ -13398,6 +13393,7 @@ function requireRetryHandler$1 () {
 	      );
 
 	      this.resume = resume;
+	      this.headersSent = true;
 	      this.etag = headers.etag != null ? headers.etag : null;
 
 	      // Weak etags are not useful for comparison nor cache
@@ -13437,7 +13433,7 @@ function requireRetryHandler$1 () {
 	  }
 
 	  onError (err) {
-	    if (this.aborted || isDisturbed(this.opts.body)) {
+	    if (this.aborted || isDisturbed(this.opts.body) || (this.headersSent && this.resume == null)) {
 	      return this.handler.onError(err)
 	    }
 
@@ -23762,7 +23758,7 @@ function requireUtil$a () {
 
 	    if (
 	      code < 0x20 || // exclude CTLs (0-31)
-	      code === 0x7F || // DEL
+	      code > 0x7E || // exclude DEL and non-ascii
 	      code === 0x3B // ;
 	    ) {
 	      throw new Error('Invalid cookie path')
@@ -23771,16 +23767,80 @@ function requireUtil$a () {
 	}
 
 	/**
-	 * I have no idea why these values aren't allowed to be honest,
-	 * but Deno tests these. - Khafra
+	 * <let-dig> ::= <letter> | <digit>
+	 *
+	 * <letter> ::= any one of the 52 alphabetic characters A through Z in
+	 * upper case and a through z in lower case
+	 *
+	 * <digit> ::= any one of the ten digits 0 through 9r
+	 *
+	 * @see https://www.rfc-editor.org/rfc/rfc1034#section-3.5
+	 * @param {number} code
+	 */
+	function isLetterOrDigit (code) {
+	  return (
+	    (code >= 0x30 && code <= 0x39) || // 0-9
+	    (code >= 0x41 && code <= 0x5A) || // A-Z
+	    (code >= 0x61 && code <= 0x7A) // a-z
+	  )
+	}
+
+	/**
+	 * Validates a cookie domain against the "preferred name syntax".
+	 *
+	 * <domain>      ::= <subdomain> | " "
+	 * <subdomain>   ::= <label> | <subdomain> "." <label>
+	 * <label>       ::= <let-dig> [ [ <ldh-str> ] <let-dig> ]
+	 * <ldh-str>     ::= <let-dig-hyp> | <let-dig-hyp> <ldh-str>
+	 * <let-dig-hyp> ::= <let-dig> | "-"
+	 *
+	 * @see https://www.rfc-editor.org/rfc/rfc1034#section-3.5
+	 * @see https://www.rfc-editor.org/rfc/rfc1123#section-2.1
+	 * @see https://www.rfc-editor.org/rfc/rfc1035#section-2.3.4
 	 * @param {string} domain
 	 */
 	function validateCookieDomain (domain) {
-	  if (
-	    domain.startsWith('-') ||
-	    domain.endsWith('.') ||
-	    domain.endsWith('-')
-	  ) {
+	  // <domain> ::= <subdomain> | " "
+	  if (domain === ' ') {
+	    return
+	  }
+
+	  if (domain.length > 255) {
+	    throw new Error('Invalid cookie domain')
+	  }
+
+	  let labelLength = 0;
+
+	  for (let i = 0; i < domain.length; ++i) {
+	    const code = domain.charCodeAt(i);
+
+	    if (code === 0x2E) {
+	      if (labelLength === 0) {
+	        throw new Error('Invalid cookie domain')
+	      }
+
+	      if (domain.charCodeAt(i - 1) === 0x2D) { // "-"
+	        throw new Error('Invalid cookie domain')
+	      }
+
+	      labelLength = 0;
+	      continue
+	    }
+
+	    if (labelLength === 0 && !isLetterOrDigit(code)) {
+	      throw new Error('Invalid cookie domain')
+	    }
+
+	    if (!isLetterOrDigit(code) && code !== 0x2D) { // "-"
+	      throw new Error('Invalid cookie domain')
+	    }
+
+	    if (++labelLength > 63) {
+	      throw new Error('Invalid cookie domain')
+	    }
+	  }
+
+	  if (labelLength === 0 || domain.charCodeAt(domain.length - 1) === 0x2D) { // "-"
 	    throw new Error('Invalid cookie domain')
 	  }
 	}
@@ -23923,7 +23983,13 @@ function requireUtil$a () {
 
 	    const [key, ...value] = part.split('=');
 
-	    out.push(`${key.trim()}=${value.join('=')}`);
+	    const trimmedKey = key.trim();
+	    const joinedValue = value.join('=');
+
+	    validateCookieName(trimmedKey);
+	    validateCookieValue(joinedValue);
+
+	    out.push(`${trimmedKey}=${joinedValue}`);
 	  }
 
 	  return out.join('; ')
@@ -23940,11 +24006,11 @@ function requireUtil$a () {
 	return util$a;
 }
 
-var parse$2;
+var parse$3;
 var hasRequiredParse$1;
 
 function requireParse$1 () {
-	if (hasRequiredParse$1) return parse$2;
+	if (hasRequiredParse$1) return parse$3;
 	hasRequiredParse$1 = 1;
 
 	const { maxNameValuePairSize, maxAttributeValueSize } = requireConstants$6();
@@ -24251,11 +24317,11 @@ function requireParse$1 () {
 	  return parseUnparsedAttributes(unparsedAttributes, cookieAttributeList)
 	}
 
-	parse$2 = {
+	parse$3 = {
 	  parseSetCookie,
 	  parseUnparsedAttributes
 	};
-	return parse$2;
+	return parse$3;
 }
 
 var cookies$1;
@@ -25514,7 +25580,7 @@ function requireConnection$1 () {
 	        // is specified, the server needs to include the same field and one of
 	        // the selected subprotocol values in its response for the connection to
 	        // be established.
-	        if (!requestProtocols.includes(secProtocol)) {
+	        if (requestProtocols === null || !requestProtocols.includes(secProtocol)) {
 	          failWebsocketConnection(ws, 'Protocol was not set in the opening handshake.');
 	          return
 	        }
@@ -25761,7 +25827,12 @@ function requirePermessageDeflate$1 () {
 
 	        if (this.#maxPayloadSize > 0 && this.#inflate[kLength] > this.#maxPayloadSize) {
 	          callback(new MessageSizeExceededError());
+	          // The inflater may still hold buffered input that can emit a late
+	          // zlib error. Remove the data listener, then deterministically stop
+	          // the stream so a subsequent 'error' cannot fire without a listener
+	          // (which would terminate the process as an unhandled error event).
 	          this.#inflate.removeAllListeners();
+	          this.#inflate.destroy();
 	          this.#inflate = null;
 	          return
 	        }
@@ -27110,6 +27181,49 @@ function requireEventsourceStream$1 () {
 	 */
 	const SPACE = 0x20;
 
+	const DATA = Buffer.from('data');
+	const EVENT = Buffer.from('event');
+	const ID = Buffer.from('id');
+	const RETRY = Buffer.from('retry');
+
+	function isASCIINumberBytes (buffer, start) {
+	  if (start >= buffer.length) {
+	    return false
+	  }
+
+	  for (let i = start; i < buffer.length; i++) {
+	    if (buffer[i] < 0x30 || buffer[i] > 0x39) {
+	      return false
+	    }
+	  }
+
+	  return true
+	}
+
+	function isValidLastEventIdBytes (buffer, start) {
+	  for (let i = start; i < buffer.length; i++) {
+	    if (buffer[i] === 0x00) {
+	      return false
+	    }
+	  }
+
+	  return true
+	}
+
+	function isFieldName (line, length, field) {
+	  if (length !== field.length) {
+	    return false
+	  }
+
+	  for (let i = 0; i < length; i++) {
+	    if (line[i] !== field[i]) {
+	      return false
+	    }
+	  }
+
+	  return true
+	}
+
 	/**
 	 * @typedef {object} EventSourceStreamEvent
 	 * @type {object}
@@ -27150,11 +27264,14 @@ function requireEventsourceStream$1 () {
 	  eventEndCheck = false
 
 	  /**
-	   * @type {Buffer}
+	   * @type {Buffer[]}
 	   */
-	  buffer = null
+	  chunks = []
 
+	  chunkIndex = 0
 	  pos = 0
+	  lineChunkIndex = 0
+	  linePos = 0
 
 	  event = {
 	    data: undefined,
@@ -27193,92 +27310,20 @@ function requireEventsourceStream$1 () {
 	      return
 	    }
 
-	    // Cache the chunk in the buffer, as the data might not be complete while
-	    // processing it
-	    // TODO: Investigate if there is a more performant way to handle
-	    // incoming chunks
-	    // see: https://github.com/nodejs/undici/issues/2630
-	    if (this.buffer) {
-	      this.buffer = Buffer.concat([this.buffer, chunk]);
-	    } else {
-	      this.buffer = chunk;
-	    }
+	    this.chunks.push(chunk);
 
 	    // Strip leading byte-order-mark if we opened the stream and started
 	    // the processing of the incoming data
 	    if (this.checkBOM) {
-	      switch (this.buffer.length) {
-	        case 1:
-	          // Check if the first byte is the same as the first byte of the BOM
-	          if (this.buffer[0] === BOM[0]) {
-	            // If it is, we need to wait for more data
-	            callback();
-	            return
-	          }
-	          // Set the checkBOM flag to false as we don't need to check for the
-	          // BOM anymore
-	          this.checkBOM = false;
-
-	          // The buffer only contains one byte so we need to wait for more data
-	          callback();
-	          return
-	        case 2:
-	          // Check if the first two bytes are the same as the first two bytes
-	          // of the BOM
-	          if (
-	            this.buffer[0] === BOM[0] &&
-	            this.buffer[1] === BOM[1]
-	          ) {
-	            // If it is, we need to wait for more data, because the third byte
-	            // is needed to determine if it is the BOM or not
-	            callback();
-	            return
-	          }
-
-	          // Set the checkBOM flag to false as we don't need to check for the
-	          // BOM anymore
-	          this.checkBOM = false;
-	          break
-	        case 3:
-	          // Check if the first three bytes are the same as the first three
-	          // bytes of the BOM
-	          if (
-	            this.buffer[0] === BOM[0] &&
-	            this.buffer[1] === BOM[1] &&
-	            this.buffer[2] === BOM[2]
-	          ) {
-	            // If it is, we can drop the buffered data, as it is only the BOM
-	            this.buffer = Buffer.alloc(0);
-	            // Set the checkBOM flag to false as we don't need to check for the
-	            // BOM anymore
-	            this.checkBOM = false;
-
-	            // Await more data
-	            callback();
-	            return
-	          }
-	          // If it is not the BOM, we can start processing the data
-	          this.checkBOM = false;
-	          break
-	        default:
-	          // The buffer is longer than 3 bytes, so we can drop the BOM if it is
-	          // present
-	          if (
-	            this.buffer[0] === BOM[0] &&
-	            this.buffer[1] === BOM[1] &&
-	            this.buffer[2] === BOM[2]
-	          ) {
-	            // Remove the BOM from the buffer
-	            this.buffer = this.buffer.subarray(3);
-	          }
-
-	          // Set the checkBOM flag to false as we don't need to check for the
-	          this.checkBOM = false;
-	          break
+	      if (this.handleBOM()) {
+	        callback();
+	        return
 	      }
 	    }
 
-	    while (this.pos < this.buffer.length) {
+	    while (this.hasCurrentByte()) {
+	      const byte = this.currentByte();
+
 	      // If the previous line ended with an end-of-line, we need to check
 	      // if the next character is also an end-of-line.
 	      if (this.eventEndCheck) {
@@ -27291,10 +27336,9 @@ function requireEventsourceStream$1 () {
 	        if (this.crlfCheck) {
 	          // If the current character is a line feed, we can remove it
 	          // from the buffer and reset the crlfCheck flag
-	          if (this.buffer[this.pos] === LF) {
-	            this.buffer = this.buffer.subarray(this.pos + 1);
-	            this.pos = 0;
+	          if (byte === LF) {
 	            this.crlfCheck = false;
+	            this.consumeCurrentByte();
 
 	            // It is possible that the line feed is not the end of the
 	            // event. We need to check if the next character is an
@@ -27310,19 +27354,17 @@ function requireEventsourceStream$1 () {
 	          this.crlfCheck = false;
 	        }
 
-	        if (this.buffer[this.pos] === LF || this.buffer[this.pos] === CR) {
+	        if (byte === LF || byte === CR) {
 	          // If the current character is a carriage return, we need to
 	          // set the crlfCheck flag to true, as we need to check if the
 	          // next character is a line feed so we can remove it from the
 	          // buffer
-	          if (this.buffer[this.pos] === CR) {
+	          if (byte === CR) {
 	            this.crlfCheck = true;
 	          }
 
-	          this.buffer = this.buffer.subarray(this.pos + 1);
-	          this.pos = 0;
-	          if (
-	            this.event.data !== undefined || this.event.event || this.event.id || this.event.retry) {
+	          this.consumeCurrentByte();
+	          if (this.hasPendingEvent()) {
 	            this.processEvent(this.event);
 	          }
 	          this.clearEvent();
@@ -27336,22 +27378,18 @@ function requireEventsourceStream$1 () {
 
 	      // If the current character is an end-of-line, we can process the
 	      // line
-	      if (this.buffer[this.pos] === LF || this.buffer[this.pos] === CR) {
+	      if (byte === LF || byte === CR) {
 	        // If the current character is a carriage return, we need to
 	        // set the crlfCheck flag to true, as we need to check if the
 	        // next character is a line feed
-	        if (this.buffer[this.pos] === CR) {
+	        if (byte === CR) {
 	          this.crlfCheck = true;
 	        }
 
 	        // In any case, we can process the line as we reached an
 	        // end-of-line character
-	        this.parseLine(this.buffer.subarray(0, this.pos), this.event);
-
-	        // Remove the processed line from the buffer
-	        this.buffer = this.buffer.subarray(this.pos + 1);
-	        // Reset the position as we removed the processed line from the buffer
-	        this.pos = 0;
+	        this.parseLine(this.readLine(), this.event);
+	        this.consumeCurrentByte();
 	        // A line was processed and this could be the end of the event. We need
 	        // to check if the next line is empty to determine if the event is
 	        // finished.
@@ -27359,7 +27397,7 @@ function requireEventsourceStream$1 () {
 	        continue
 	      }
 
-	      this.pos++;
+	      this.advanceCursor();
 	    }
 
 	    callback();
@@ -27384,64 +27422,53 @@ function requireEventsourceStream$1 () {
 	      return
 	    }
 
-	    let field = '';
-	    let value = '';
+	    let fieldLength = line.length;
+	    let valueStart = line.length;
 
 	    // If the line contains a U+003A COLON character (:)
 	    if (colonPosition !== -1) {
-	      // Collect the characters on the line before the first U+003A COLON
-	      // character (:), and let field be that string.
-	      // TODO: Investigate if there is a more performant way to extract the
-	      // field
-	      // see: https://github.com/nodejs/undici/issues/2630
-	      field = line.subarray(0, colonPosition).toString('utf8');
+	      fieldLength = colonPosition;
 
 	      // Collect the characters on the line after the first U+003A COLON
 	      // character (:), and let value be that string.
 	      // If value starts with a U+0020 SPACE character, remove it from value.
-	      let valueStart = colonPosition + 1;
+	      valueStart = colonPosition + 1;
 	      if (line[valueStart] === SPACE) {
 	        ++valueStart;
 	      }
-	      // TODO: Investigate if there is a more performant way to extract the
-	      // value
-	      // see: https://github.com/nodejs/undici/issues/2630
-	      value = line.subarray(valueStart).toString('utf8');
-
-	      // Otherwise, the string is not empty but does not contain a U+003A COLON
-	      // character (:)
-	    } else {
-	      // Process the field using the steps described below, using the whole
-	      // line as the field name, and the empty string as the field value.
-	      field = line.toString('utf8');
-	      value = '';
 	    }
 
-	    // Modify the event with the field name and value. The value is also
-	    // decoded as UTF-8
-	    switch (field) {
-	      case 'data':
-	        if (event[field] === undefined) {
-	          event[field] = value;
-	        } else {
-	          event[field] += `\n${value}`;
-	        }
-	        break
-	      case 'retry':
-	        if (isASCIINumber(value)) {
-	          event[field] = value;
-	        }
-	        break
-	      case 'id':
-	        if (isValidLastEventId(value)) {
-	          event[field] = value;
-	        }
-	        break
-	      case 'event':
-	        if (value.length > 0) {
-	          event[field] = value;
-	        }
-	        break
+	    if (isFieldName(line, fieldLength, DATA)) {
+	      const value = line.toString('utf8', valueStart);
+
+	      if (event.data === undefined) {
+	        event.data = value;
+	      } else {
+	        event.data += `\n${value}`;
+	      }
+	      return
+	    }
+
+	    if (isFieldName(line, fieldLength, RETRY)) {
+	      if (isASCIINumberBytes(line, valueStart)) {
+	        event.retry = line.toString('utf8', valueStart);
+	      }
+	      return
+	    }
+
+	    if (isFieldName(line, fieldLength, ID)) {
+	      if (isValidLastEventIdBytes(line, valueStart)) {
+	        event.id = line.toString('utf8', valueStart);
+	      }
+	      return
+	    }
+
+	    if (isFieldName(line, fieldLength, EVENT)) {
+	      const value = line.toString('utf8', valueStart);
+
+	      if (value.length > 0) {
+	        event.event = value;
+	      }
 	    }
 	  }
 
@@ -27471,12 +27498,151 @@ function requireEventsourceStream$1 () {
 	  }
 
 	  clearEvent () {
-	    this.event = {
-	      data: undefined,
-	      event: undefined,
-	      id: undefined,
-	      retry: undefined
-	    };
+	    this.event.data = undefined;
+	    this.event.event = undefined;
+	    this.event.id = undefined;
+	    this.event.retry = undefined;
+	  }
+
+	  hasPendingEvent () {
+	    return this.event.data !== undefined ||
+	      this.event.event !== undefined ||
+	      this.event.id !== undefined ||
+	      this.event.retry !== undefined
+	  }
+
+	  hasCurrentByte () {
+	    return this.chunkIndex < this.chunks.length &&
+	      this.pos < this.chunks[this.chunkIndex].length
+	  }
+
+	  currentByte () {
+	    return this.chunks[this.chunkIndex][this.pos]
+	  }
+
+	  consumeCurrentByte () {
+	    this.advanceCursor();
+	    this.syncLineStartToCursor();
+	  }
+
+	  advanceCursor () {
+	    this.pos++;
+
+	    while (this.chunkIndex < this.chunks.length && this.pos >= this.chunks[this.chunkIndex].length) {
+	      this.chunkIndex++;
+	      this.pos = 0;
+	    }
+	  }
+
+	  syncLineStartToCursor () {
+	    this.lineChunkIndex = this.chunkIndex;
+	    this.linePos = this.pos;
+	    this.dropConsumedChunks();
+	  }
+
+	  dropConsumedChunks () {
+	    while (this.lineChunkIndex > 0) {
+	      this.chunks.shift();
+	      this.lineChunkIndex--;
+	      this.chunkIndex--;
+	    }
+
+	    if (this.chunkIndex === this.chunks.length) {
+	      this.chunks.length = 0;
+	      this.chunkIndex = 0;
+	      this.pos = 0;
+	      this.lineChunkIndex = 0;
+	      this.linePos = 0;
+	    }
+	  }
+
+	  readLine () {
+	    if (this.lineChunkIndex === this.chunkIndex) {
+	      return this.chunks[this.chunkIndex].subarray(this.linePos, this.pos)
+	    }
+
+	    const chunks = [];
+	    let length = 0;
+
+	    for (let i = this.lineChunkIndex; i <= this.chunkIndex; i++) {
+	      const chunk = this.chunks[i];
+	      const start = i === this.lineChunkIndex ? this.linePos : 0;
+	      const end = i === this.chunkIndex ? this.pos : chunk.length;
+	      const slice = chunk.subarray(start, end);
+	      length += slice.length;
+	      chunks.push(slice);
+	    }
+
+	    return Buffer.concat(chunks, length)
+	  }
+
+	  peekBufferedByte (offset) {
+	    let chunkIndex = this.lineChunkIndex;
+	    let pos = this.linePos;
+
+	    while (chunkIndex < this.chunks.length) {
+	      const chunk = this.chunks[chunkIndex];
+	      const remaining = chunk.length - pos;
+
+	      if (offset < remaining) {
+	        return chunk[pos + offset]
+	      }
+
+	      offset -= remaining;
+	      chunkIndex++;
+	      pos = 0;
+	    }
+	  }
+
+	  discardLeadingBytes (count) {
+	    while (count > 0 && this.lineChunkIndex < this.chunks.length) {
+	      const chunk = this.chunks[this.lineChunkIndex];
+	      const remaining = chunk.length - this.linePos;
+
+	      if (count < remaining) {
+	        this.linePos += count;
+	        count = 0;
+	      } else {
+	        count -= remaining;
+	        this.lineChunkIndex++;
+	        this.linePos = 0;
+	      }
+	    }
+
+	    this.chunkIndex = this.lineChunkIndex;
+	    this.pos = this.linePos;
+	    this.dropConsumedChunks();
+	  }
+
+	  handleBOM () {
+	    const first = this.peekBufferedByte(0);
+	    const second = this.peekBufferedByte(1);
+	    const third = this.peekBufferedByte(2);
+
+	    if (second === undefined) {
+	      if (first === BOM[0]) {
+	        return true
+	      }
+
+	      this.checkBOM = false;
+	      return true
+	    }
+
+	    if (third === undefined) {
+	      if (first === BOM[0] && second === BOM[1]) {
+	        return true
+	      }
+
+	      this.checkBOM = false;
+	      return false
+	    }
+
+	    if (first === BOM[0] && second === BOM[1] && third === BOM[2]) {
+	      this.discardLeadingBytes(3);
+	    }
+
+	    this.checkBOM = false;
+	    return !this.hasCurrentByte()
 	  }
 	}
 
@@ -28150,10 +28316,10 @@ function requireUndici$1 () {
 	return undici$1;
 }
 
-var undiciExports$1 = requireUndici$1();
+requireUndici$1();
 
 /* eslint-disable @typescript-eslint/no-explicit-any */
-var __awaiter$1 = (undefined && undefined.__awaiter) || function (thisArg, _arguments, P, generator) {
+(undefined && undefined.__awaiter) || function (thisArg, _arguments, P, generator) {
     function adopt(value) { return value instanceof P ? value : new P(function (resolve) { resolve(value); }); }
     return new (P || (P = Promise))(function (resolve, reject) {
         function fulfilled(value) { try { step(generator.next(value)); } catch (e) { reject(e); } }
@@ -28201,635 +28367,18 @@ var MediaTypes;
 (function (MediaTypes) {
     MediaTypes["ApplicationJson"] = "application/json";
 })(MediaTypes || (MediaTypes = {}));
-const HttpRedirectCodes = [
+[
     HttpCodes.MovedPermanently,
     HttpCodes.ResourceMoved,
     HttpCodes.SeeOther,
     HttpCodes.TemporaryRedirect,
     HttpCodes.PermanentRedirect
 ];
-const HttpResponseRetryCodes = [
+[
     HttpCodes.BadGateway,
     HttpCodes.ServiceUnavailable,
     HttpCodes.GatewayTimeout
 ];
-const RetryableHttpVerbs = ['OPTIONS', 'GET', 'DELETE', 'HEAD'];
-const ExponentialBackoffCeiling = 10;
-const ExponentialBackoffTimeSlice = 5;
-class HttpClientError extends Error {
-    constructor(message, statusCode) {
-        super(message);
-        this.name = 'HttpClientError';
-        this.statusCode = statusCode;
-        Object.setPrototypeOf(this, HttpClientError.prototype);
-    }
-}
-class HttpClientResponse {
-    constructor(message) {
-        this.message = message;
-    }
-    readBody() {
-        return __awaiter$1(this, void 0, void 0, function* () {
-            return new Promise((resolve) => __awaiter$1(this, void 0, void 0, function* () {
-                let output = Buffer.alloc(0);
-                this.message.on('data', (chunk) => {
-                    output = Buffer.concat([output, chunk]);
-                });
-                this.message.on('end', () => {
-                    resolve(output.toString());
-                });
-            }));
-        });
-    }
-    readBodyBuffer() {
-        return __awaiter$1(this, void 0, void 0, function* () {
-            return new Promise((resolve) => __awaiter$1(this, void 0, void 0, function* () {
-                const chunks = [];
-                this.message.on('data', (chunk) => {
-                    chunks.push(chunk);
-                });
-                this.message.on('end', () => {
-                    resolve(Buffer.concat(chunks));
-                });
-            }));
-        });
-    }
-}
-class HttpClient {
-    constructor(userAgent, handlers, requestOptions) {
-        this._ignoreSslError = false;
-        this._allowRedirects = true;
-        this._allowRedirectDowngrade = false;
-        this._maxRedirects = 50;
-        this._allowRetries = false;
-        this._maxRetries = 1;
-        this._keepAlive = false;
-        this._disposed = false;
-        this.userAgent = this._getUserAgentWithOrchestrationId(userAgent);
-        this.handlers = handlers || [];
-        this.requestOptions = requestOptions;
-        if (requestOptions) {
-            if (requestOptions.ignoreSslError != null) {
-                this._ignoreSslError = requestOptions.ignoreSslError;
-            }
-            this._socketTimeout = requestOptions.socketTimeout;
-            if (requestOptions.allowRedirects != null) {
-                this._allowRedirects = requestOptions.allowRedirects;
-            }
-            if (requestOptions.allowRedirectDowngrade != null) {
-                this._allowRedirectDowngrade = requestOptions.allowRedirectDowngrade;
-            }
-            if (requestOptions.maxRedirects != null) {
-                this._maxRedirects = Math.max(requestOptions.maxRedirects, 0);
-            }
-            if (requestOptions.keepAlive != null) {
-                this._keepAlive = requestOptions.keepAlive;
-            }
-            if (requestOptions.allowRetries != null) {
-                this._allowRetries = requestOptions.allowRetries;
-            }
-            if (requestOptions.maxRetries != null) {
-                this._maxRetries = requestOptions.maxRetries;
-            }
-        }
-    }
-    options(requestUrl, additionalHeaders) {
-        return __awaiter$1(this, void 0, void 0, function* () {
-            return this.request('OPTIONS', requestUrl, null, additionalHeaders || {});
-        });
-    }
-    get(requestUrl, additionalHeaders) {
-        return __awaiter$1(this, void 0, void 0, function* () {
-            return this.request('GET', requestUrl, null, additionalHeaders || {});
-        });
-    }
-    del(requestUrl, additionalHeaders) {
-        return __awaiter$1(this, void 0, void 0, function* () {
-            return this.request('DELETE', requestUrl, null, additionalHeaders || {});
-        });
-    }
-    post(requestUrl, data, additionalHeaders) {
-        return __awaiter$1(this, void 0, void 0, function* () {
-            return this.request('POST', requestUrl, data, additionalHeaders || {});
-        });
-    }
-    patch(requestUrl, data, additionalHeaders) {
-        return __awaiter$1(this, void 0, void 0, function* () {
-            return this.request('PATCH', requestUrl, data, additionalHeaders || {});
-        });
-    }
-    put(requestUrl, data, additionalHeaders) {
-        return __awaiter$1(this, void 0, void 0, function* () {
-            return this.request('PUT', requestUrl, data, additionalHeaders || {});
-        });
-    }
-    head(requestUrl, additionalHeaders) {
-        return __awaiter$1(this, void 0, void 0, function* () {
-            return this.request('HEAD', requestUrl, null, additionalHeaders || {});
-        });
-    }
-    sendStream(verb, requestUrl, stream, additionalHeaders) {
-        return __awaiter$1(this, void 0, void 0, function* () {
-            return this.request(verb, requestUrl, stream, additionalHeaders);
-        });
-    }
-    /**
-     * Gets a typed object from an endpoint
-     * Be aware that not found returns a null.  Other errors (4xx, 5xx) reject the promise
-     */
-    getJson(requestUrl_1) {
-        return __awaiter$1(this, arguments, void 0, function* (requestUrl, additionalHeaders = {}) {
-            additionalHeaders[Headers.Accept] = this._getExistingOrDefaultHeader(additionalHeaders, Headers.Accept, MediaTypes.ApplicationJson);
-            const res = yield this.get(requestUrl, additionalHeaders);
-            return this._processResponse(res, this.requestOptions);
-        });
-    }
-    postJson(requestUrl_1, obj_1) {
-        return __awaiter$1(this, arguments, void 0, function* (requestUrl, obj, additionalHeaders = {}) {
-            const data = JSON.stringify(obj, null, 2);
-            additionalHeaders[Headers.Accept] = this._getExistingOrDefaultHeader(additionalHeaders, Headers.Accept, MediaTypes.ApplicationJson);
-            additionalHeaders[Headers.ContentType] =
-                this._getExistingOrDefaultContentTypeHeader(additionalHeaders, MediaTypes.ApplicationJson);
-            const res = yield this.post(requestUrl, data, additionalHeaders);
-            return this._processResponse(res, this.requestOptions);
-        });
-    }
-    putJson(requestUrl_1, obj_1) {
-        return __awaiter$1(this, arguments, void 0, function* (requestUrl, obj, additionalHeaders = {}) {
-            const data = JSON.stringify(obj, null, 2);
-            additionalHeaders[Headers.Accept] = this._getExistingOrDefaultHeader(additionalHeaders, Headers.Accept, MediaTypes.ApplicationJson);
-            additionalHeaders[Headers.ContentType] =
-                this._getExistingOrDefaultContentTypeHeader(additionalHeaders, MediaTypes.ApplicationJson);
-            const res = yield this.put(requestUrl, data, additionalHeaders);
-            return this._processResponse(res, this.requestOptions);
-        });
-    }
-    patchJson(requestUrl_1, obj_1) {
-        return __awaiter$1(this, arguments, void 0, function* (requestUrl, obj, additionalHeaders = {}) {
-            const data = JSON.stringify(obj, null, 2);
-            additionalHeaders[Headers.Accept] = this._getExistingOrDefaultHeader(additionalHeaders, Headers.Accept, MediaTypes.ApplicationJson);
-            additionalHeaders[Headers.ContentType] =
-                this._getExistingOrDefaultContentTypeHeader(additionalHeaders, MediaTypes.ApplicationJson);
-            const res = yield this.patch(requestUrl, data, additionalHeaders);
-            return this._processResponse(res, this.requestOptions);
-        });
-    }
-    /**
-     * Makes a raw http request.
-     * All other methods such as get, post, patch, and request ultimately call this.
-     * Prefer get, del, post and patch
-     */
-    request(verb, requestUrl, data, headers) {
-        return __awaiter$1(this, void 0, void 0, function* () {
-            if (this._disposed) {
-                throw new Error('Client has already been disposed.');
-            }
-            const parsedUrl = new URL(requestUrl);
-            let info = this._prepareRequest(verb, parsedUrl, headers);
-            // Only perform retries on reads since writes may not be idempotent.
-            const maxTries = this._allowRetries && RetryableHttpVerbs.includes(verb)
-                ? this._maxRetries + 1
-                : 1;
-            let numTries = 0;
-            let response;
-            do {
-                response = yield this.requestRaw(info, data);
-                // Check if it's an authentication challenge
-                if (response &&
-                    response.message &&
-                    response.message.statusCode === HttpCodes.Unauthorized) {
-                    let authenticationHandler;
-                    for (const handler of this.handlers) {
-                        if (handler.canHandleAuthentication(response)) {
-                            authenticationHandler = handler;
-                            break;
-                        }
-                    }
-                    if (authenticationHandler) {
-                        return authenticationHandler.handleAuthentication(this, info, data);
-                    }
-                    else {
-                        // We have received an unauthorized response but have no handlers to handle it.
-                        // Let the response return to the caller.
-                        return response;
-                    }
-                }
-                let redirectsRemaining = this._maxRedirects;
-                while (response.message.statusCode &&
-                    HttpRedirectCodes.includes(response.message.statusCode) &&
-                    this._allowRedirects &&
-                    redirectsRemaining > 0) {
-                    const redirectUrl = response.message.headers['location'];
-                    if (!redirectUrl) {
-                        // if there's no location to redirect to, we won't
-                        break;
-                    }
-                    const parsedRedirectUrl = new URL(redirectUrl);
-                    if (parsedUrl.protocol === 'https:' &&
-                        parsedUrl.protocol !== parsedRedirectUrl.protocol &&
-                        !this._allowRedirectDowngrade) {
-                        throw new Error('Redirect from HTTPS to HTTP protocol. This downgrade is not allowed for security reasons. If you want to allow this behavior, set the allowRedirectDowngrade option to true.');
-                    }
-                    // we need to finish reading the response before reassigning response
-                    // which will leak the open socket.
-                    yield response.readBody();
-                    // strip authorization header if redirected to a different hostname
-                    if (parsedRedirectUrl.hostname !== parsedUrl.hostname) {
-                        for (const header in headers) {
-                            // header names are case insensitive
-                            if (header.toLowerCase() === 'authorization') {
-                                delete headers[header];
-                            }
-                        }
-                    }
-                    // let's make the request with the new redirectUrl
-                    info = this._prepareRequest(verb, parsedRedirectUrl, headers);
-                    response = yield this.requestRaw(info, data);
-                    redirectsRemaining--;
-                }
-                if (!response.message.statusCode ||
-                    !HttpResponseRetryCodes.includes(response.message.statusCode)) {
-                    // If not a retry code, return immediately instead of retrying
-                    return response;
-                }
-                numTries += 1;
-                if (numTries < maxTries) {
-                    yield response.readBody();
-                    yield this._performExponentialBackoff(numTries);
-                }
-            } while (numTries < maxTries);
-            return response;
-        });
-    }
-    /**
-     * Needs to be called if keepAlive is set to true in request options.
-     */
-    dispose() {
-        if (this._agent) {
-            this._agent.destroy();
-        }
-        this._disposed = true;
-    }
-    /**
-     * Raw request.
-     * @param info
-     * @param data
-     */
-    requestRaw(info, data) {
-        return __awaiter$1(this, void 0, void 0, function* () {
-            return new Promise((resolve, reject) => {
-                function callbackForResult(err, res) {
-                    if (err) {
-                        reject(err);
-                    }
-                    else if (!res) {
-                        // If `err` is not passed, then `res` must be passed.
-                        reject(new Error('Unknown error'));
-                    }
-                    else {
-                        resolve(res);
-                    }
-                }
-                this.requestRawWithCallback(info, data, callbackForResult);
-            });
-        });
-    }
-    /**
-     * Raw request with callback.
-     * @param info
-     * @param data
-     * @param onResult
-     */
-    requestRawWithCallback(info, data, onResult) {
-        if (typeof data === 'string') {
-            if (!info.options.headers) {
-                info.options.headers = {};
-            }
-            info.options.headers['Content-Length'] = Buffer.byteLength(data, 'utf8');
-        }
-        let callbackCalled = false;
-        function handleResult(err, res) {
-            if (!callbackCalled) {
-                callbackCalled = true;
-                onResult(err, res);
-            }
-        }
-        const req = info.httpModule.request(info.options, (msg) => {
-            const res = new HttpClientResponse(msg);
-            handleResult(undefined, res);
-        });
-        let socket;
-        req.on('socket', sock => {
-            socket = sock;
-        });
-        // If we ever get disconnected, we want the socket to timeout eventually
-        req.setTimeout(this._socketTimeout || 3 * 60000, () => {
-            if (socket) {
-                socket.end();
-            }
-            handleResult(new Error(`Request timeout: ${info.options.path}`));
-        });
-        req.on('error', function (err) {
-            // err has statusCode property
-            // res should have headers
-            handleResult(err);
-        });
-        if (data && typeof data === 'string') {
-            req.write(data, 'utf8');
-        }
-        if (data && typeof data !== 'string') {
-            data.on('close', function () {
-                req.end();
-            });
-            data.pipe(req);
-        }
-        else {
-            req.end();
-        }
-    }
-    /**
-     * Gets an http agent. This function is useful when you need an http agent that handles
-     * routing through a proxy server - depending upon the url and proxy environment variables.
-     * @param serverUrl  The server URL where the request will be sent. For example, https://api.github.com
-     */
-    getAgent(serverUrl) {
-        const parsedUrl = new URL(serverUrl);
-        return this._getAgent(parsedUrl);
-    }
-    getAgentDispatcher(serverUrl) {
-        const parsedUrl = new URL(serverUrl);
-        const proxyUrl = getProxyUrl(parsedUrl);
-        const useProxy = proxyUrl && proxyUrl.hostname;
-        if (!useProxy) {
-            return;
-        }
-        return this._getProxyAgentDispatcher(parsedUrl, proxyUrl);
-    }
-    _prepareRequest(method, requestUrl, headers) {
-        const info = {};
-        info.parsedUrl = requestUrl;
-        const usingSsl = info.parsedUrl.protocol === 'https:';
-        info.httpModule = usingSsl ? https : http;
-        const defaultPort = usingSsl ? 443 : 80;
-        info.options = {};
-        info.options.host = info.parsedUrl.hostname;
-        info.options.port = info.parsedUrl.port
-            ? parseInt(info.parsedUrl.port)
-            : defaultPort;
-        info.options.path =
-            (info.parsedUrl.pathname || '') + (info.parsedUrl.search || '');
-        info.options.method = method;
-        info.options.headers = this._mergeHeaders(headers);
-        if (this.userAgent != null) {
-            info.options.headers['user-agent'] = this.userAgent;
-        }
-        info.options.agent = this._getAgent(info.parsedUrl);
-        // gives handlers an opportunity to participate
-        if (this.handlers) {
-            for (const handler of this.handlers) {
-                handler.prepareRequest(info.options);
-            }
-        }
-        return info;
-    }
-    _mergeHeaders(headers) {
-        if (this.requestOptions && this.requestOptions.headers) {
-            return Object.assign({}, lowercaseKeys$1(this.requestOptions.headers), lowercaseKeys$1(headers || {}));
-        }
-        return lowercaseKeys$1(headers || {});
-    }
-    /**
-     * Gets an existing header value or returns a default.
-     * Handles converting number header values to strings since HTTP headers must be strings.
-     * Note: This returns string | string[] since some headers can have multiple values.
-     * For headers that must always be a single string (like Content-Type), use the
-     * specialized _getExistingOrDefaultContentTypeHeader method instead.
-     */
-    _getExistingOrDefaultHeader(additionalHeaders, header, _default) {
-        let clientHeader;
-        if (this.requestOptions && this.requestOptions.headers) {
-            const headerValue = lowercaseKeys$1(this.requestOptions.headers)[header];
-            if (headerValue) {
-                clientHeader =
-                    typeof headerValue === 'number' ? headerValue.toString() : headerValue;
-            }
-        }
-        const additionalValue = additionalHeaders[header];
-        if (additionalValue !== undefined) {
-            return typeof additionalValue === 'number'
-                ? additionalValue.toString()
-                : additionalValue;
-        }
-        if (clientHeader !== undefined) {
-            return clientHeader;
-        }
-        return _default;
-    }
-    /**
-     * Specialized version of _getExistingOrDefaultHeader for Content-Type header.
-     * Always returns a single string (not an array) since Content-Type should be a single value.
-     * Converts arrays to comma-separated strings and numbers to strings to ensure type safety.
-     * This was split from _getExistingOrDefaultHeader to provide stricter typing for callers
-     * that assign the result to places expecting a string (e.g., additionalHeaders[Headers.ContentType]).
-     */
-    _getExistingOrDefaultContentTypeHeader(additionalHeaders, _default) {
-        let clientHeader;
-        if (this.requestOptions && this.requestOptions.headers) {
-            const headerValue = lowercaseKeys$1(this.requestOptions.headers)[Headers.ContentType];
-            if (headerValue) {
-                if (typeof headerValue === 'number') {
-                    clientHeader = String(headerValue);
-                }
-                else if (Array.isArray(headerValue)) {
-                    clientHeader = headerValue.join(', ');
-                }
-                else {
-                    clientHeader = headerValue;
-                }
-            }
-        }
-        const additionalValue = additionalHeaders[Headers.ContentType];
-        // Return the first non-undefined value, converting numbers or arrays to strings if necessary
-        if (additionalValue !== undefined) {
-            if (typeof additionalValue === 'number') {
-                return String(additionalValue);
-            }
-            else if (Array.isArray(additionalValue)) {
-                return additionalValue.join(', ');
-            }
-            else {
-                return additionalValue;
-            }
-        }
-        if (clientHeader !== undefined) {
-            return clientHeader;
-        }
-        return _default;
-    }
-    _getAgent(parsedUrl) {
-        let agent;
-        const proxyUrl = getProxyUrl(parsedUrl);
-        const useProxy = proxyUrl && proxyUrl.hostname;
-        if (this._keepAlive && useProxy) {
-            agent = this._proxyAgent;
-        }
-        if (!useProxy) {
-            agent = this._agent;
-        }
-        // if agent is already assigned use that agent.
-        if (agent) {
-            return agent;
-        }
-        const usingSsl = parsedUrl.protocol === 'https:';
-        let maxSockets = 100;
-        if (this.requestOptions) {
-            maxSockets = this.requestOptions.maxSockets || http.globalAgent.maxSockets;
-        }
-        // This is `useProxy` again, but we need to check `proxyURl` directly for TypeScripts's flow analysis.
-        if (proxyUrl && proxyUrl.hostname) {
-            const agentOptions = {
-                maxSockets,
-                keepAlive: this._keepAlive,
-                proxy: Object.assign(Object.assign({}, ((proxyUrl.username || proxyUrl.password) && {
-                    proxyAuth: `${proxyUrl.username}:${proxyUrl.password}`
-                })), { host: proxyUrl.hostname, port: proxyUrl.port })
-            };
-            let tunnelAgent;
-            const overHttps = proxyUrl.protocol === 'https:';
-            if (usingSsl) {
-                tunnelAgent = overHttps ? tunnelExports.httpsOverHttps : tunnelExports.httpsOverHttp;
-            }
-            else {
-                tunnelAgent = overHttps ? tunnelExports.httpOverHttps : tunnelExports.httpOverHttp;
-            }
-            agent = tunnelAgent(agentOptions);
-            this._proxyAgent = agent;
-        }
-        // if tunneling agent isn't assigned create a new agent
-        if (!agent) {
-            const options = { keepAlive: this._keepAlive, maxSockets };
-            agent = usingSsl ? new https.Agent(options) : new http.Agent(options);
-            this._agent = agent;
-        }
-        if (usingSsl && this._ignoreSslError) {
-            // we don't want to set NODE_TLS_REJECT_UNAUTHORIZED=0 since that will affect request for entire process
-            // http.RequestOptions doesn't expose a way to modify RequestOptions.agent.options
-            // we have to cast it to any and change it directly
-            agent.options = Object.assign(agent.options || {}, {
-                rejectUnauthorized: false
-            });
-        }
-        return agent;
-    }
-    _getProxyAgentDispatcher(parsedUrl, proxyUrl) {
-        let proxyAgent;
-        if (this._keepAlive) {
-            proxyAgent = this._proxyAgentDispatcher;
-        }
-        // if agent is already assigned use that agent.
-        if (proxyAgent) {
-            return proxyAgent;
-        }
-        const usingSsl = parsedUrl.protocol === 'https:';
-        proxyAgent = new undiciExports$1.ProxyAgent(Object.assign({ uri: proxyUrl.href, pipelining: !this._keepAlive ? 0 : 1 }, ((proxyUrl.username || proxyUrl.password) && {
-            token: `Basic ${Buffer.from(`${proxyUrl.username}:${proxyUrl.password}`).toString('base64')}`
-        })));
-        this._proxyAgentDispatcher = proxyAgent;
-        if (usingSsl && this._ignoreSslError) {
-            // we don't want to set NODE_TLS_REJECT_UNAUTHORIZED=0 since that will affect request for entire process
-            // http.RequestOptions doesn't expose a way to modify RequestOptions.agent.options
-            // we have to cast it to any and change it directly
-            proxyAgent.options = Object.assign(proxyAgent.options.requestTls || {}, {
-                rejectUnauthorized: false
-            });
-        }
-        return proxyAgent;
-    }
-    _getUserAgentWithOrchestrationId(userAgent) {
-        const baseUserAgent = userAgent || 'actions/http-client';
-        const orchId = process.env['ACTIONS_ORCHESTRATION_ID'];
-        if (orchId) {
-            // Sanitize the orchestration ID to ensure it contains only valid characters
-            // Valid characters: 0-9, a-z, _, -, .
-            const sanitizedId = orchId.replace(/[^a-z0-9_.-]/gi, '_');
-            return `${baseUserAgent} actions_orchestration_id/${sanitizedId}`;
-        }
-        return baseUserAgent;
-    }
-    _performExponentialBackoff(retryNumber) {
-        return __awaiter$1(this, void 0, void 0, function* () {
-            retryNumber = Math.min(ExponentialBackoffCeiling, retryNumber);
-            const ms = ExponentialBackoffTimeSlice * Math.pow(2, retryNumber);
-            return new Promise(resolve => setTimeout(() => resolve(), ms));
-        });
-    }
-    _processResponse(res, options) {
-        return __awaiter$1(this, void 0, void 0, function* () {
-            return new Promise((resolve, reject) => __awaiter$1(this, void 0, void 0, function* () {
-                const statusCode = res.message.statusCode || 0;
-                const response = {
-                    statusCode,
-                    result: null,
-                    headers: {}
-                };
-                // not found leads to null obj returned
-                if (statusCode === HttpCodes.NotFound) {
-                    resolve(response);
-                }
-                // get the result from the body
-                function dateTimeDeserializer(key, value) {
-                    if (typeof value === 'string') {
-                        const a = new Date(value);
-                        if (!isNaN(a.valueOf())) {
-                            return a;
-                        }
-                    }
-                    return value;
-                }
-                let obj;
-                let contents;
-                try {
-                    contents = yield res.readBody();
-                    if (contents && contents.length > 0) {
-                        if (options && options.deserializeDates) {
-                            obj = JSON.parse(contents, dateTimeDeserializer);
-                        }
-                        else {
-                            obj = JSON.parse(contents);
-                        }
-                        response.result = obj;
-                    }
-                    response.headers = res.message.headers;
-                }
-                catch (err) {
-                    // Invalid resource (contents not json);  leaving result obj null
-                }
-                // note that 3xx redirects are handled by the http layer.
-                if (statusCode > 299) {
-                    let msg;
-                    // if exception/error in body, attempt to get better error
-                    if (obj && obj.message) {
-                        msg = obj.message;
-                    }
-                    else if (contents && contents.length > 0) {
-                        // it may be the case that the exception is in the body message as string
-                        msg = contents;
-                    }
-                    else {
-                        msg = `Failed request: (${statusCode})`;
-                    }
-                    const err = new HttpClientError(msg, statusCode);
-                    err.result = response.result;
-                    reject(err);
-                }
-                else {
-                    resolve(response);
-                }
-            }));
-        });
-    }
-}
-const lowercaseKeys$1 = (obj) => Object.keys(obj).reduce((c, k) => ((c[k.toLowerCase()] = obj[k]), c), {});
 
 (undefined && undefined.__awaiter) || function (thisArg, _arguments, P, generator) {
     function adopt(value) { return value instanceof P ? value : new P(function (resolve) { resolve(value); }); }
@@ -29048,6 +28597,111 @@ class Context {
         }
         throw new Error("context.repo requires a GITHUB_REPOSITORY environment variable like 'owner/repo'");
     }
+}
+
+var lib = {};
+
+var proxy = {};
+
+var hasRequiredProxy;
+
+function requireProxy () {
+	if (hasRequiredProxy) return proxy;
+	hasRequiredProxy = 1;
+	Object.defineProperty(proxy, "__esModule", { value: true });
+	proxy.getProxyUrl = getProxyUrl;
+	proxy.checkBypass = checkBypass;
+	function getProxyUrl(reqUrl) {
+	    const usingSsl = reqUrl.protocol === 'https:';
+	    if (checkBypass(reqUrl)) {
+	        return undefined;
+	    }
+	    const proxyVar = (() => {
+	        if (usingSsl) {
+	            return process.env['https_proxy'] || process.env['HTTPS_PROXY'];
+	        }
+	        else {
+	            return process.env['http_proxy'] || process.env['HTTP_PROXY'];
+	        }
+	    })();
+	    if (proxyVar) {
+	        try {
+	            return new DecodedURL(proxyVar);
+	        }
+	        catch (_a) {
+	            if (!proxyVar.startsWith('http://') && !proxyVar.startsWith('https://'))
+	                return new DecodedURL(`http://${proxyVar}`);
+	        }
+	    }
+	    else {
+	        return undefined;
+	    }
+	}
+	function checkBypass(reqUrl) {
+	    if (!reqUrl.hostname) {
+	        return false;
+	    }
+	    const reqHost = reqUrl.hostname;
+	    if (isLoopbackAddress(reqHost)) {
+	        return true;
+	    }
+	    const noProxy = process.env['no_proxy'] || process.env['NO_PROXY'] || '';
+	    if (!noProxy) {
+	        return false;
+	    }
+	    // Determine the request port
+	    let reqPort;
+	    if (reqUrl.port) {
+	        reqPort = Number(reqUrl.port);
+	    }
+	    else if (reqUrl.protocol === 'http:') {
+	        reqPort = 80;
+	    }
+	    else if (reqUrl.protocol === 'https:') {
+	        reqPort = 443;
+	    }
+	    // Format the request hostname and hostname with port
+	    const upperReqHosts = [reqUrl.hostname.toUpperCase()];
+	    if (typeof reqPort === 'number') {
+	        upperReqHosts.push(`${upperReqHosts[0]}:${reqPort}`);
+	    }
+	    // Compare request host against noproxy
+	    for (const upperNoProxyItem of noProxy
+	        .split(',')
+	        .map(x => x.trim().toUpperCase())
+	        .filter(x => x)) {
+	        if (upperNoProxyItem === '*' ||
+	            upperReqHosts.some(x => x === upperNoProxyItem ||
+	                x.endsWith(`.${upperNoProxyItem}`) ||
+	                (upperNoProxyItem.startsWith('.') &&
+	                    x.endsWith(`${upperNoProxyItem}`)))) {
+	            return true;
+	        }
+	    }
+	    return false;
+	}
+	function isLoopbackAddress(host) {
+	    const hostLower = host.toLowerCase();
+	    return (hostLower === 'localhost' ||
+	        hostLower.startsWith('127.') ||
+	        hostLower.startsWith('[::1]') ||
+	        hostLower.startsWith('[0:0:0:0:0:0:0:1]'));
+	}
+	class DecodedURL extends URL {
+	    constructor(url, base) {
+	        super(url, base);
+	        this._decodedUsername = decodeURIComponent(super.username);
+	        this._decodedPassword = decodeURIComponent(super.password);
+	    }
+	    get username() {
+	        return this._decodedUsername;
+	    }
+	    get password() {
+	        return this._decodedPassword;
+	    }
+	}
+	
+	return proxy;
 }
 
 var undici = {};
@@ -31141,7 +30795,13 @@ function requireRequest$1 () {
 	      } else if (typeof val[i] === 'object') {
 	        throw new InvalidArgumentError(`invalid ${key} header`)
 	      } else {
-	        arr.push(`${val[i]}`);
+	        // Coerce primitives (and reject unsafe coercions such as functions
+	        // with a crafted toString/Symbol.toPrimitive).
+	        const str = `${val[i]}`;
+	        if (!isValidHeaderValue(str)) {
+	          throw new InvalidArgumentError(`invalid ${key} header`)
+	        }
+	        arr.push(str);
 	      }
 	    }
 	    val = arr;
@@ -31152,7 +30812,12 @@ function requireRequest$1 () {
 	  } else if (val === null) {
 	    val = '';
 	  } else {
+	    // Coerce primitives (and reject unsafe coercions such as functions
+	    // with a crafted toString/Symbol.toPrimitive).
 	    val = `${val}`;
+	    if (!isValidHeaderValue(val)) {
+	      throw new InvalidArgumentError(`invalid ${key} header`)
+	    }
 	  }
 
 	  if (headerName === 'host') {
@@ -37208,6 +36873,7 @@ function requireClientH1 () {
 	  RequestContentLengthMismatchError,
 	  ResponseContentLengthMismatchError,
 	  RequestAbortedError,
+	  InvalidArgumentError,
 	  HeadersTimeoutError,
 	  HeadersOverflowError,
 	  SocketError,
@@ -38073,7 +37739,7 @@ function requireClientH1 () {
 
 	function clearIdleSocketValidation (socket) {
 	  if (socket[kIdleSocketValidationTimeout]) {
-	    clearTimeout(socket[kIdleSocketValidationTimeout]);
+	    clearImmediate(socket[kIdleSocketValidationTimeout]);
 	    socket[kIdleSocketValidationTimeout] = null;
 	  }
 
@@ -38082,15 +37748,23 @@ function requireClientH1 () {
 
 	function scheduleIdleSocketValidation (client, socket) {
 	  socket[kIdleSocketValidation] = 1;
-	  socket[kIdleSocketValidationTimeout] = setTimeout(() => {
+	  // Yield to the check phase (after poll) so unsolicited bytes / FIN / RST
+	  // already pending on this idle keep-alive socket are processed before the
+	  // next request is written (GHSA-35p6-xmwp-9g52).
+	  //
+	  // setTimeout(0) pays Node's ~1ms timer floor on every sequential reuse
+	  // (#5493). setImmediate avoids that, but an *unref'd* Immediate lets poll
+	  // block for ~500ms when the event loop is otherwise idle (#5600 / #5606).
+	  // A ref'd Immediate both keeps the pending request alive and makes poll
+	  // return immediately — the hybrid those issues asked for.
+	  socket[kIdleSocketValidationTimeout] = setImmediate(() => {
 	    socket[kIdleSocketValidationTimeout] = null;
 	    socket[kIdleSocketValidation] = 2;
 
 	    if (client[kSocket] === socket && !socket.destroyed) {
 	      client[kResume]();
 	    }
-	  }, 0);
-	  socket[kIdleSocketValidationTimeout].unref?.();
+	  });
 	}
 
 	/**
@@ -38191,8 +37865,16 @@ function requireClientH1 () {
 	    }
 	    body = bodyStream.stream;
 	    contentLength = bodyStream.length;
-	  } else if (util.isBlobLike(body) && request.contentType == null && body.type) {
-	    headers.push('content-type', body.type);
+	  } else if (util.isBlobLike(body) && request.contentType == null) {
+	    const contentType = body.type;
+	    if (contentType) {
+	      const contentTypeValue = `${contentType}`;
+	      if (!util.isValidHeaderValue(contentTypeValue)) {
+	        util.errorRequest(client, request, new InvalidArgumentError('invalid content-type header'));
+	        return false
+	      }
+	      headers.push('content-type', contentTypeValue);
+	    }
 	  }
 
 	  if (body && typeof body.read === 'function') {
@@ -41627,6 +41309,28 @@ function requireRetryHandler () {
 	  return new Date(retryAfter).getTime() - current
 	}
 
+	function validatePartialResponseContentLength (headers, range, statusCode, retryCount) {
+	  const contentLength = headers['content-length'];
+	  if (contentLength == null) {
+	    return null
+	  }
+
+	  if (!Number.isFinite(range.start) || !Number.isFinite(range.end)) {
+	    return null
+	  }
+
+	  const length = Number(contentLength);
+	  const expectedLength = range.end - range.start + 1;
+	  if (!Number.isFinite(length) || length !== expectedLength) {
+	    return new RequestRetryError('Content-Length mismatch', statusCode, {
+	      headers,
+	      data: { count: retryCount }
+	    })
+	  }
+
+	  return null
+	}
+
 	class RetryHandler {
 	  constructor (opts, handlers) {
 	    const { retryOptions, ...dispatchOpts } = opts;
@@ -41680,6 +41384,7 @@ function requireRetryHandler () {
 	    this.end = null;
 	    this.etag = null;
 	    this.resume = null;
+	    this.headersSent = false;
 
 	    // Handle possible onConnect duplication
 	    this.handler.onConnect(reason => {
@@ -41690,6 +41395,20 @@ function requireRetryHandler () {
 	        this.reason = reason;
 	      }
 	    });
+	  }
+
+	  checkpointResponseEnd (headers, resume) {
+	    if (this.end == null && this.opts.method !== 'HEAD') {
+	      const contentLength = headers['content-length'];
+	      this.end = contentLength != null ? Number(contentLength) - 1 : null;
+
+	      assert(
+	        this.end == null || Number.isFinite(this.end),
+	        'invalid content-length'
+	      );
+	    }
+
+	    this.resume = this.end != null ? resume : null;
 	  }
 
 	  onRequestSent () {
@@ -41781,6 +41500,8 @@ function requireRetryHandler () {
 
 	    if (statusCode >= 300) {
 	      if (this.retryOpts.statusCodes.includes(statusCode) === false) {
+	        this.headersSent = true;
+	        this.checkpointResponseEnd(headers, resume);
 	        return this.handler.onHeaders(
 	          statusCode,
 	          rawHeaders,
@@ -41841,10 +41562,23 @@ function requireRetryHandler () {
 	        return false
 	      }
 
+	      const contentLengthError = validatePartialResponseContentLength(headers, contentRange, statusCode, this.retryCount);
+	      if (contentLengthError != null) {
+	        this.abort(contentLengthError);
+	        return false
+	      }
+
 	      const { start, size, end = size - 1 } = contentRange;
 
-	      assert(this.start === start, 'content-range mismatch');
-	      assert(this.end == null || this.end === end, 'content-range mismatch');
+	      if (this.start !== start || (this.end != null && this.end !== end)) {
+	        this.abort(
+	          new RequestRetryError('Content-Range mismatch', statusCode, {
+	            headers,
+	            data: { count: this.retryCount }
+	          })
+	        );
+	        return false
+	      }
 
 	      this.resume = resume;
 	      return true
@@ -41856,12 +41590,19 @@ function requireRetryHandler () {
 	        const range = parseRangeHeader(headers['content-range']);
 
 	        if (range == null) {
+	          this.headersSent = true;
 	          return this.handler.onHeaders(
 	            statusCode,
 	            rawHeaders,
 	            resume,
 	            statusMessage
 	          )
+	        }
+
+	        const contentLengthError = validatePartialResponseContentLength(headers, range, statusCode, this.retryCount);
+	        if (contentLengthError != null) {
+	          this.abort(contentLengthError);
+	          return false
 	        }
 
 	        const { start, size, end = size - 1 } = range;
@@ -41888,6 +41629,7 @@ function requireRetryHandler () {
 	      );
 
 	      this.resume = resume;
+	      this.headersSent = true;
 	      this.etag = headers.etag != null ? headers.etag : null;
 
 	      // Weak etags are not useful for comparison nor cache
@@ -41927,7 +41669,7 @@ function requireRetryHandler () {
 	  }
 
 	  onError (err) {
-	    if (this.aborted || isDisturbed(this.opts.body)) {
+	    if (this.aborted || isDisturbed(this.opts.body) || (this.headersSent && this.resume == null)) {
 	      return this.handler.onError(err)
 	    }
 
@@ -52252,7 +51994,7 @@ function requireUtil$2 () {
 
 	    if (
 	      code < 0x20 || // exclude CTLs (0-31)
-	      code === 0x7F || // DEL
+	      code > 0x7E || // exclude DEL and non-ascii
 	      code === 0x3B // ;
 	    ) {
 	      throw new Error('Invalid cookie path')
@@ -52261,16 +52003,80 @@ function requireUtil$2 () {
 	}
 
 	/**
-	 * I have no idea why these values aren't allowed to be honest,
-	 * but Deno tests these. - Khafra
+	 * <let-dig> ::= <letter> | <digit>
+	 *
+	 * <letter> ::= any one of the 52 alphabetic characters A through Z in
+	 * upper case and a through z in lower case
+	 *
+	 * <digit> ::= any one of the ten digits 0 through 9r
+	 *
+	 * @see https://www.rfc-editor.org/rfc/rfc1034#section-3.5
+	 * @param {number} code
+	 */
+	function isLetterOrDigit (code) {
+	  return (
+	    (code >= 0x30 && code <= 0x39) || // 0-9
+	    (code >= 0x41 && code <= 0x5A) || // A-Z
+	    (code >= 0x61 && code <= 0x7A) // a-z
+	  )
+	}
+
+	/**
+	 * Validates a cookie domain against the "preferred name syntax".
+	 *
+	 * <domain>      ::= <subdomain> | " "
+	 * <subdomain>   ::= <label> | <subdomain> "." <label>
+	 * <label>       ::= <let-dig> [ [ <ldh-str> ] <let-dig> ]
+	 * <ldh-str>     ::= <let-dig-hyp> | <let-dig-hyp> <ldh-str>
+	 * <let-dig-hyp> ::= <let-dig> | "-"
+	 *
+	 * @see https://www.rfc-editor.org/rfc/rfc1034#section-3.5
+	 * @see https://www.rfc-editor.org/rfc/rfc1123#section-2.1
+	 * @see https://www.rfc-editor.org/rfc/rfc1035#section-2.3.4
 	 * @param {string} domain
 	 */
 	function validateCookieDomain (domain) {
-	  if (
-	    domain.startsWith('-') ||
-	    domain.endsWith('.') ||
-	    domain.endsWith('-')
-	  ) {
+	  // <domain> ::= <subdomain> | " "
+	  if (domain === ' ') {
+	    return
+	  }
+
+	  if (domain.length > 255) {
+	    throw new Error('Invalid cookie domain')
+	  }
+
+	  let labelLength = 0;
+
+	  for (let i = 0; i < domain.length; ++i) {
+	    const code = domain.charCodeAt(i);
+
+	    if (code === 0x2E) {
+	      if (labelLength === 0) {
+	        throw new Error('Invalid cookie domain')
+	      }
+
+	      if (domain.charCodeAt(i - 1) === 0x2D) { // "-"
+	        throw new Error('Invalid cookie domain')
+	      }
+
+	      labelLength = 0;
+	      continue
+	    }
+
+	    if (labelLength === 0 && !isLetterOrDigit(code)) {
+	      throw new Error('Invalid cookie domain')
+	    }
+
+	    if (!isLetterOrDigit(code) && code !== 0x2D) { // "-"
+	      throw new Error('Invalid cookie domain')
+	    }
+
+	    if (++labelLength > 63) {
+	      throw new Error('Invalid cookie domain')
+	    }
+	  }
+
+	  if (labelLength === 0 || domain.charCodeAt(domain.length - 1) === 0x2D) { // "-"
 	    throw new Error('Invalid cookie domain')
 	  }
 	}
@@ -52413,7 +52219,13 @@ function requireUtil$2 () {
 
 	    const [key, ...value] = part.split('=');
 
-	    out.push(`${key.trim()}=${value.join('=')}`);
+	    const trimmedKey = key.trim();
+	    const joinedValue = value.join('=');
+
+	    validateCookieName(trimmedKey);
+	    validateCookieValue(joinedValue);
+
+	    out.push(`${trimmedKey}=${joinedValue}`);
 	  }
 
 	  return out.join('; ')
@@ -52430,11 +52242,11 @@ function requireUtil$2 () {
 	return util$2;
 }
 
-var parse$1;
+var parse$2;
 var hasRequiredParse;
 
 function requireParse () {
-	if (hasRequiredParse) return parse$1;
+	if (hasRequiredParse) return parse$2;
 	hasRequiredParse = 1;
 
 	const { maxNameValuePairSize, maxAttributeValueSize } = requireConstants$1();
@@ -52741,11 +52553,11 @@ function requireParse () {
 	  return parseUnparsedAttributes(unparsedAttributes, cookieAttributeList)
 	}
 
-	parse$1 = {
+	parse$2 = {
 	  parseSetCookie,
 	  parseUnparsedAttributes
 	};
-	return parse$1;
+	return parse$2;
 }
 
 var cookies;
@@ -54004,7 +53816,7 @@ function requireConnection () {
 	        // is specified, the server needs to include the same field and one of
 	        // the selected subprotocol values in its response for the connection to
 	        // be established.
-	        if (!requestProtocols.includes(secProtocol)) {
+	        if (requestProtocols === null || !requestProtocols.includes(secProtocol)) {
 	          failWebsocketConnection(ws, 'Protocol was not set in the opening handshake.');
 	          return
 	        }
@@ -54251,7 +54063,12 @@ function requirePermessageDeflate () {
 
 	        if (this.#maxPayloadSize > 0 && this.#inflate[kLength] > this.#maxPayloadSize) {
 	          callback(new MessageSizeExceededError());
+	          // The inflater may still hold buffered input that can emit a late
+	          // zlib error. Remove the data listener, then deterministically stop
+	          // the stream so a subsequent 'error' cannot fire without a listener
+	          // (which would terminate the process as an unhandled error event).
 	          this.#inflate.removeAllListeners();
+	          this.#inflate.destroy();
 	          this.#inflate = null;
 	          return
 	        }
@@ -55600,6 +55417,49 @@ function requireEventsourceStream () {
 	 */
 	const SPACE = 0x20;
 
+	const DATA = Buffer.from('data');
+	const EVENT = Buffer.from('event');
+	const ID = Buffer.from('id');
+	const RETRY = Buffer.from('retry');
+
+	function isASCIINumberBytes (buffer, start) {
+	  if (start >= buffer.length) {
+	    return false
+	  }
+
+	  for (let i = start; i < buffer.length; i++) {
+	    if (buffer[i] < 0x30 || buffer[i] > 0x39) {
+	      return false
+	    }
+	  }
+
+	  return true
+	}
+
+	function isValidLastEventIdBytes (buffer, start) {
+	  for (let i = start; i < buffer.length; i++) {
+	    if (buffer[i] === 0x00) {
+	      return false
+	    }
+	  }
+
+	  return true
+	}
+
+	function isFieldName (line, length, field) {
+	  if (length !== field.length) {
+	    return false
+	  }
+
+	  for (let i = 0; i < length; i++) {
+	    if (line[i] !== field[i]) {
+	      return false
+	    }
+	  }
+
+	  return true
+	}
+
 	/**
 	 * @typedef {object} EventSourceStreamEvent
 	 * @type {object}
@@ -55640,11 +55500,14 @@ function requireEventsourceStream () {
 	  eventEndCheck = false
 
 	  /**
-	   * @type {Buffer}
+	   * @type {Buffer[]}
 	   */
-	  buffer = null
+	  chunks = []
 
+	  chunkIndex = 0
 	  pos = 0
+	  lineChunkIndex = 0
+	  linePos = 0
 
 	  event = {
 	    data: undefined,
@@ -55683,92 +55546,20 @@ function requireEventsourceStream () {
 	      return
 	    }
 
-	    // Cache the chunk in the buffer, as the data might not be complete while
-	    // processing it
-	    // TODO: Investigate if there is a more performant way to handle
-	    // incoming chunks
-	    // see: https://github.com/nodejs/undici/issues/2630
-	    if (this.buffer) {
-	      this.buffer = Buffer.concat([this.buffer, chunk]);
-	    } else {
-	      this.buffer = chunk;
-	    }
+	    this.chunks.push(chunk);
 
 	    // Strip leading byte-order-mark if we opened the stream and started
 	    // the processing of the incoming data
 	    if (this.checkBOM) {
-	      switch (this.buffer.length) {
-	        case 1:
-	          // Check if the first byte is the same as the first byte of the BOM
-	          if (this.buffer[0] === BOM[0]) {
-	            // If it is, we need to wait for more data
-	            callback();
-	            return
-	          }
-	          // Set the checkBOM flag to false as we don't need to check for the
-	          // BOM anymore
-	          this.checkBOM = false;
-
-	          // The buffer only contains one byte so we need to wait for more data
-	          callback();
-	          return
-	        case 2:
-	          // Check if the first two bytes are the same as the first two bytes
-	          // of the BOM
-	          if (
-	            this.buffer[0] === BOM[0] &&
-	            this.buffer[1] === BOM[1]
-	          ) {
-	            // If it is, we need to wait for more data, because the third byte
-	            // is needed to determine if it is the BOM or not
-	            callback();
-	            return
-	          }
-
-	          // Set the checkBOM flag to false as we don't need to check for the
-	          // BOM anymore
-	          this.checkBOM = false;
-	          break
-	        case 3:
-	          // Check if the first three bytes are the same as the first three
-	          // bytes of the BOM
-	          if (
-	            this.buffer[0] === BOM[0] &&
-	            this.buffer[1] === BOM[1] &&
-	            this.buffer[2] === BOM[2]
-	          ) {
-	            // If it is, we can drop the buffered data, as it is only the BOM
-	            this.buffer = Buffer.alloc(0);
-	            // Set the checkBOM flag to false as we don't need to check for the
-	            // BOM anymore
-	            this.checkBOM = false;
-
-	            // Await more data
-	            callback();
-	            return
-	          }
-	          // If it is not the BOM, we can start processing the data
-	          this.checkBOM = false;
-	          break
-	        default:
-	          // The buffer is longer than 3 bytes, so we can drop the BOM if it is
-	          // present
-	          if (
-	            this.buffer[0] === BOM[0] &&
-	            this.buffer[1] === BOM[1] &&
-	            this.buffer[2] === BOM[2]
-	          ) {
-	            // Remove the BOM from the buffer
-	            this.buffer = this.buffer.subarray(3);
-	          }
-
-	          // Set the checkBOM flag to false as we don't need to check for the
-	          this.checkBOM = false;
-	          break
+	      if (this.handleBOM()) {
+	        callback();
+	        return
 	      }
 	    }
 
-	    while (this.pos < this.buffer.length) {
+	    while (this.hasCurrentByte()) {
+	      const byte = this.currentByte();
+
 	      // If the previous line ended with an end-of-line, we need to check
 	      // if the next character is also an end-of-line.
 	      if (this.eventEndCheck) {
@@ -55781,10 +55572,9 @@ function requireEventsourceStream () {
 	        if (this.crlfCheck) {
 	          // If the current character is a line feed, we can remove it
 	          // from the buffer and reset the crlfCheck flag
-	          if (this.buffer[this.pos] === LF) {
-	            this.buffer = this.buffer.subarray(this.pos + 1);
-	            this.pos = 0;
+	          if (byte === LF) {
 	            this.crlfCheck = false;
+	            this.consumeCurrentByte();
 
 	            // It is possible that the line feed is not the end of the
 	            // event. We need to check if the next character is an
@@ -55800,19 +55590,17 @@ function requireEventsourceStream () {
 	          this.crlfCheck = false;
 	        }
 
-	        if (this.buffer[this.pos] === LF || this.buffer[this.pos] === CR) {
+	        if (byte === LF || byte === CR) {
 	          // If the current character is a carriage return, we need to
 	          // set the crlfCheck flag to true, as we need to check if the
 	          // next character is a line feed so we can remove it from the
 	          // buffer
-	          if (this.buffer[this.pos] === CR) {
+	          if (byte === CR) {
 	            this.crlfCheck = true;
 	          }
 
-	          this.buffer = this.buffer.subarray(this.pos + 1);
-	          this.pos = 0;
-	          if (
-	            this.event.data !== undefined || this.event.event || this.event.id || this.event.retry) {
+	          this.consumeCurrentByte();
+	          if (this.hasPendingEvent()) {
 	            this.processEvent(this.event);
 	          }
 	          this.clearEvent();
@@ -55826,22 +55614,18 @@ function requireEventsourceStream () {
 
 	      // If the current character is an end-of-line, we can process the
 	      // line
-	      if (this.buffer[this.pos] === LF || this.buffer[this.pos] === CR) {
+	      if (byte === LF || byte === CR) {
 	        // If the current character is a carriage return, we need to
 	        // set the crlfCheck flag to true, as we need to check if the
 	        // next character is a line feed
-	        if (this.buffer[this.pos] === CR) {
+	        if (byte === CR) {
 	          this.crlfCheck = true;
 	        }
 
 	        // In any case, we can process the line as we reached an
 	        // end-of-line character
-	        this.parseLine(this.buffer.subarray(0, this.pos), this.event);
-
-	        // Remove the processed line from the buffer
-	        this.buffer = this.buffer.subarray(this.pos + 1);
-	        // Reset the position as we removed the processed line from the buffer
-	        this.pos = 0;
+	        this.parseLine(this.readLine(), this.event);
+	        this.consumeCurrentByte();
 	        // A line was processed and this could be the end of the event. We need
 	        // to check if the next line is empty to determine if the event is
 	        // finished.
@@ -55849,7 +55633,7 @@ function requireEventsourceStream () {
 	        continue
 	      }
 
-	      this.pos++;
+	      this.advanceCursor();
 	    }
 
 	    callback();
@@ -55874,64 +55658,53 @@ function requireEventsourceStream () {
 	      return
 	    }
 
-	    let field = '';
-	    let value = '';
+	    let fieldLength = line.length;
+	    let valueStart = line.length;
 
 	    // If the line contains a U+003A COLON character (:)
 	    if (colonPosition !== -1) {
-	      // Collect the characters on the line before the first U+003A COLON
-	      // character (:), and let field be that string.
-	      // TODO: Investigate if there is a more performant way to extract the
-	      // field
-	      // see: https://github.com/nodejs/undici/issues/2630
-	      field = line.subarray(0, colonPosition).toString('utf8');
+	      fieldLength = colonPosition;
 
 	      // Collect the characters on the line after the first U+003A COLON
 	      // character (:), and let value be that string.
 	      // If value starts with a U+0020 SPACE character, remove it from value.
-	      let valueStart = colonPosition + 1;
+	      valueStart = colonPosition + 1;
 	      if (line[valueStart] === SPACE) {
 	        ++valueStart;
 	      }
-	      // TODO: Investigate if there is a more performant way to extract the
-	      // value
-	      // see: https://github.com/nodejs/undici/issues/2630
-	      value = line.subarray(valueStart).toString('utf8');
-
-	      // Otherwise, the string is not empty but does not contain a U+003A COLON
-	      // character (:)
-	    } else {
-	      // Process the field using the steps described below, using the whole
-	      // line as the field name, and the empty string as the field value.
-	      field = line.toString('utf8');
-	      value = '';
 	    }
 
-	    // Modify the event with the field name and value. The value is also
-	    // decoded as UTF-8
-	    switch (field) {
-	      case 'data':
-	        if (event[field] === undefined) {
-	          event[field] = value;
-	        } else {
-	          event[field] += `\n${value}`;
-	        }
-	        break
-	      case 'retry':
-	        if (isASCIINumber(value)) {
-	          event[field] = value;
-	        }
-	        break
-	      case 'id':
-	        if (isValidLastEventId(value)) {
-	          event[field] = value;
-	        }
-	        break
-	      case 'event':
-	        if (value.length > 0) {
-	          event[field] = value;
-	        }
-	        break
+	    if (isFieldName(line, fieldLength, DATA)) {
+	      const value = line.toString('utf8', valueStart);
+
+	      if (event.data === undefined) {
+	        event.data = value;
+	      } else {
+	        event.data += `\n${value}`;
+	      }
+	      return
+	    }
+
+	    if (isFieldName(line, fieldLength, RETRY)) {
+	      if (isASCIINumberBytes(line, valueStart)) {
+	        event.retry = line.toString('utf8', valueStart);
+	      }
+	      return
+	    }
+
+	    if (isFieldName(line, fieldLength, ID)) {
+	      if (isValidLastEventIdBytes(line, valueStart)) {
+	        event.id = line.toString('utf8', valueStart);
+	      }
+	      return
+	    }
+
+	    if (isFieldName(line, fieldLength, EVENT)) {
+	      const value = line.toString('utf8', valueStart);
+
+	      if (value.length > 0) {
+	        event.event = value;
+	      }
 	    }
 	  }
 
@@ -55961,12 +55734,151 @@ function requireEventsourceStream () {
 	  }
 
 	  clearEvent () {
-	    this.event = {
-	      data: undefined,
-	      event: undefined,
-	      id: undefined,
-	      retry: undefined
-	    };
+	    this.event.data = undefined;
+	    this.event.event = undefined;
+	    this.event.id = undefined;
+	    this.event.retry = undefined;
+	  }
+
+	  hasPendingEvent () {
+	    return this.event.data !== undefined ||
+	      this.event.event !== undefined ||
+	      this.event.id !== undefined ||
+	      this.event.retry !== undefined
+	  }
+
+	  hasCurrentByte () {
+	    return this.chunkIndex < this.chunks.length &&
+	      this.pos < this.chunks[this.chunkIndex].length
+	  }
+
+	  currentByte () {
+	    return this.chunks[this.chunkIndex][this.pos]
+	  }
+
+	  consumeCurrentByte () {
+	    this.advanceCursor();
+	    this.syncLineStartToCursor();
+	  }
+
+	  advanceCursor () {
+	    this.pos++;
+
+	    while (this.chunkIndex < this.chunks.length && this.pos >= this.chunks[this.chunkIndex].length) {
+	      this.chunkIndex++;
+	      this.pos = 0;
+	    }
+	  }
+
+	  syncLineStartToCursor () {
+	    this.lineChunkIndex = this.chunkIndex;
+	    this.linePos = this.pos;
+	    this.dropConsumedChunks();
+	  }
+
+	  dropConsumedChunks () {
+	    while (this.lineChunkIndex > 0) {
+	      this.chunks.shift();
+	      this.lineChunkIndex--;
+	      this.chunkIndex--;
+	    }
+
+	    if (this.chunkIndex === this.chunks.length) {
+	      this.chunks.length = 0;
+	      this.chunkIndex = 0;
+	      this.pos = 0;
+	      this.lineChunkIndex = 0;
+	      this.linePos = 0;
+	    }
+	  }
+
+	  readLine () {
+	    if (this.lineChunkIndex === this.chunkIndex) {
+	      return this.chunks[this.chunkIndex].subarray(this.linePos, this.pos)
+	    }
+
+	    const chunks = [];
+	    let length = 0;
+
+	    for (let i = this.lineChunkIndex; i <= this.chunkIndex; i++) {
+	      const chunk = this.chunks[i];
+	      const start = i === this.lineChunkIndex ? this.linePos : 0;
+	      const end = i === this.chunkIndex ? this.pos : chunk.length;
+	      const slice = chunk.subarray(start, end);
+	      length += slice.length;
+	      chunks.push(slice);
+	    }
+
+	    return Buffer.concat(chunks, length)
+	  }
+
+	  peekBufferedByte (offset) {
+	    let chunkIndex = this.lineChunkIndex;
+	    let pos = this.linePos;
+
+	    while (chunkIndex < this.chunks.length) {
+	      const chunk = this.chunks[chunkIndex];
+	      const remaining = chunk.length - pos;
+
+	      if (offset < remaining) {
+	        return chunk[pos + offset]
+	      }
+
+	      offset -= remaining;
+	      chunkIndex++;
+	      pos = 0;
+	    }
+	  }
+
+	  discardLeadingBytes (count) {
+	    while (count > 0 && this.lineChunkIndex < this.chunks.length) {
+	      const chunk = this.chunks[this.lineChunkIndex];
+	      const remaining = chunk.length - this.linePos;
+
+	      if (count < remaining) {
+	        this.linePos += count;
+	        count = 0;
+	      } else {
+	        count -= remaining;
+	        this.lineChunkIndex++;
+	        this.linePos = 0;
+	      }
+	    }
+
+	    this.chunkIndex = this.lineChunkIndex;
+	    this.pos = this.linePos;
+	    this.dropConsumedChunks();
+	  }
+
+	  handleBOM () {
+	    const first = this.peekBufferedByte(0);
+	    const second = this.peekBufferedByte(1);
+	    const third = this.peekBufferedByte(2);
+
+	    if (second === undefined) {
+	      if (first === BOM[0]) {
+	        return true
+	      }
+
+	      this.checkBOM = false;
+	      return true
+	    }
+
+	    if (third === undefined) {
+	      if (first === BOM[0] && second === BOM[1]) {
+	        return true
+	      }
+
+	      this.checkBOM = false;
+	      return false
+	    }
+
+	    if (first === BOM[0] && second === BOM[1] && third === BOM[2]) {
+	      this.discardLeadingBytes(3);
+	    }
+
+	    this.checkBOM = false;
+	    return !this.hasCurrentByte()
 	  }
 	}
 
@@ -56640,6 +56552,752 @@ function requireUndici () {
 	return undici;
 }
 
+var hasRequiredLib;
+
+function requireLib () {
+	if (hasRequiredLib) return lib;
+	hasRequiredLib = 1;
+	/* eslint-disable @typescript-eslint/no-explicit-any */
+	var __createBinding = (lib && lib.__createBinding) || (Object.create ? (function(o, m, k, k2) {
+	    if (k2 === undefined) k2 = k;
+	    var desc = Object.getOwnPropertyDescriptor(m, k);
+	    if (!desc || ("get" in desc ? !m.__esModule : desc.writable || desc.configurable)) {
+	      desc = { enumerable: true, get: function() { return m[k]; } };
+	    }
+	    Object.defineProperty(o, k2, desc);
+	}) : (function(o, m, k, k2) {
+	    if (k2 === undefined) k2 = k;
+	    o[k2] = m[k];
+	}));
+	var __setModuleDefault = (lib && lib.__setModuleDefault) || (Object.create ? (function(o, v) {
+	    Object.defineProperty(o, "default", { enumerable: true, value: v });
+	}) : function(o, v) {
+	    o["default"] = v;
+	});
+	var __importStar = (lib && lib.__importStar) || (function () {
+	    var ownKeys = function(o) {
+	        ownKeys = Object.getOwnPropertyNames || function (o) {
+	            var ar = [];
+	            for (var k in o) if (Object.prototype.hasOwnProperty.call(o, k)) ar[ar.length] = k;
+	            return ar;
+	        };
+	        return ownKeys(o);
+	    };
+	    return function (mod) {
+	        if (mod && mod.__esModule) return mod;
+	        var result = {};
+	        if (mod != null) for (var k = ownKeys(mod), i = 0; i < k.length; i++) if (k[i] !== "default") __createBinding(result, mod, k[i]);
+	        __setModuleDefault(result, mod);
+	        return result;
+	    };
+	})();
+	var __awaiter = (lib && lib.__awaiter) || function (thisArg, _arguments, P, generator) {
+	    function adopt(value) { return value instanceof P ? value : new P(function (resolve) { resolve(value); }); }
+	    return new (P || (P = Promise))(function (resolve, reject) {
+	        function fulfilled(value) { try { step(generator.next(value)); } catch (e) { reject(e); } }
+	        function rejected(value) { try { step(generator["throw"](value)); } catch (e) { reject(e); } }
+	        function step(result) { result.done ? resolve(result.value) : adopt(result.value).then(fulfilled, rejected); }
+	        step((generator = generator.apply(thisArg, _arguments || [])).next());
+	    });
+	};
+	Object.defineProperty(lib, "__esModule", { value: true });
+	lib.HttpClient = lib.HttpClientResponse = lib.HttpClientError = lib.MediaTypes = lib.Headers = lib.HttpCodes = void 0;
+	lib.getProxyUrl = getProxyUrl;
+	lib.isHttps = isHttps;
+	const http$1 = __importStar(http);
+	const https$1 = __importStar(https);
+	const pm = __importStar(requireProxy());
+	const tunnel = __importStar(requireTunnel());
+	const undici_1 = requireUndici();
+	var HttpCodes;
+	(function (HttpCodes) {
+	    HttpCodes[HttpCodes["OK"] = 200] = "OK";
+	    HttpCodes[HttpCodes["MultipleChoices"] = 300] = "MultipleChoices";
+	    HttpCodes[HttpCodes["MovedPermanently"] = 301] = "MovedPermanently";
+	    HttpCodes[HttpCodes["ResourceMoved"] = 302] = "ResourceMoved";
+	    HttpCodes[HttpCodes["SeeOther"] = 303] = "SeeOther";
+	    HttpCodes[HttpCodes["NotModified"] = 304] = "NotModified";
+	    HttpCodes[HttpCodes["UseProxy"] = 305] = "UseProxy";
+	    HttpCodes[HttpCodes["SwitchProxy"] = 306] = "SwitchProxy";
+	    HttpCodes[HttpCodes["TemporaryRedirect"] = 307] = "TemporaryRedirect";
+	    HttpCodes[HttpCodes["PermanentRedirect"] = 308] = "PermanentRedirect";
+	    HttpCodes[HttpCodes["BadRequest"] = 400] = "BadRequest";
+	    HttpCodes[HttpCodes["Unauthorized"] = 401] = "Unauthorized";
+	    HttpCodes[HttpCodes["PaymentRequired"] = 402] = "PaymentRequired";
+	    HttpCodes[HttpCodes["Forbidden"] = 403] = "Forbidden";
+	    HttpCodes[HttpCodes["NotFound"] = 404] = "NotFound";
+	    HttpCodes[HttpCodes["MethodNotAllowed"] = 405] = "MethodNotAllowed";
+	    HttpCodes[HttpCodes["NotAcceptable"] = 406] = "NotAcceptable";
+	    HttpCodes[HttpCodes["ProxyAuthenticationRequired"] = 407] = "ProxyAuthenticationRequired";
+	    HttpCodes[HttpCodes["RequestTimeout"] = 408] = "RequestTimeout";
+	    HttpCodes[HttpCodes["Conflict"] = 409] = "Conflict";
+	    HttpCodes[HttpCodes["Gone"] = 410] = "Gone";
+	    HttpCodes[HttpCodes["TooManyRequests"] = 429] = "TooManyRequests";
+	    HttpCodes[HttpCodes["InternalServerError"] = 500] = "InternalServerError";
+	    HttpCodes[HttpCodes["NotImplemented"] = 501] = "NotImplemented";
+	    HttpCodes[HttpCodes["BadGateway"] = 502] = "BadGateway";
+	    HttpCodes[HttpCodes["ServiceUnavailable"] = 503] = "ServiceUnavailable";
+	    HttpCodes[HttpCodes["GatewayTimeout"] = 504] = "GatewayTimeout";
+	})(HttpCodes || (lib.HttpCodes = HttpCodes = {}));
+	var Headers;
+	(function (Headers) {
+	    Headers["Accept"] = "accept";
+	    Headers["ContentType"] = "content-type";
+	})(Headers || (lib.Headers = Headers = {}));
+	var MediaTypes;
+	(function (MediaTypes) {
+	    MediaTypes["ApplicationJson"] = "application/json";
+	})(MediaTypes || (lib.MediaTypes = MediaTypes = {}));
+	/**
+	 * Returns the proxy URL, depending upon the supplied url and proxy environment variables.
+	 * @param serverUrl  The server URL where the request will be sent. For example, https://api.github.com
+	 */
+	function getProxyUrl(serverUrl) {
+	    const proxyUrl = pm.getProxyUrl(new URL(serverUrl));
+	    return proxyUrl ? proxyUrl.href : '';
+	}
+	const HttpRedirectCodes = [
+	    HttpCodes.MovedPermanently,
+	    HttpCodes.ResourceMoved,
+	    HttpCodes.SeeOther,
+	    HttpCodes.TemporaryRedirect,
+	    HttpCodes.PermanentRedirect
+	];
+	const HttpResponseRetryCodes = [
+	    HttpCodes.BadGateway,
+	    HttpCodes.ServiceUnavailable,
+	    HttpCodes.GatewayTimeout
+	];
+	const RetryableHttpVerbs = ['OPTIONS', 'GET', 'DELETE', 'HEAD'];
+	const ExponentialBackoffCeiling = 10;
+	const ExponentialBackoffTimeSlice = 5;
+	class HttpClientError extends Error {
+	    constructor(message, statusCode) {
+	        super(message);
+	        this.name = 'HttpClientError';
+	        this.statusCode = statusCode;
+	        Object.setPrototypeOf(this, HttpClientError.prototype);
+	    }
+	}
+	lib.HttpClientError = HttpClientError;
+	class HttpClientResponse {
+	    constructor(message) {
+	        this.message = message;
+	    }
+	    readBody() {
+	        return __awaiter(this, void 0, void 0, function* () {
+	            return new Promise((resolve) => __awaiter(this, void 0, void 0, function* () {
+	                let output = Buffer.alloc(0);
+	                this.message.on('data', (chunk) => {
+	                    output = Buffer.concat([output, chunk]);
+	                });
+	                this.message.on('end', () => {
+	                    resolve(output.toString());
+	                });
+	            }));
+	        });
+	    }
+	    readBodyBuffer() {
+	        return __awaiter(this, void 0, void 0, function* () {
+	            return new Promise((resolve) => __awaiter(this, void 0, void 0, function* () {
+	                const chunks = [];
+	                this.message.on('data', (chunk) => {
+	                    chunks.push(chunk);
+	                });
+	                this.message.on('end', () => {
+	                    resolve(Buffer.concat(chunks));
+	                });
+	            }));
+	        });
+	    }
+	}
+	lib.HttpClientResponse = HttpClientResponse;
+	function isHttps(requestUrl) {
+	    const parsedUrl = new URL(requestUrl);
+	    return parsedUrl.protocol === 'https:';
+	}
+	class HttpClient {
+	    constructor(userAgent, handlers, requestOptions) {
+	        this._ignoreSslError = false;
+	        this._allowRedirects = true;
+	        this._allowRedirectDowngrade = false;
+	        this._maxRedirects = 50;
+	        this._allowRetries = false;
+	        this._maxRetries = 1;
+	        this._keepAlive = false;
+	        this._disposed = false;
+	        this.userAgent = this._getUserAgentWithOrchestrationId(userAgent);
+	        this.handlers = handlers || [];
+	        this.requestOptions = requestOptions;
+	        if (requestOptions) {
+	            if (requestOptions.ignoreSslError != null) {
+	                this._ignoreSslError = requestOptions.ignoreSslError;
+	            }
+	            this._socketTimeout = requestOptions.socketTimeout;
+	            if (requestOptions.allowRedirects != null) {
+	                this._allowRedirects = requestOptions.allowRedirects;
+	            }
+	            if (requestOptions.allowRedirectDowngrade != null) {
+	                this._allowRedirectDowngrade = requestOptions.allowRedirectDowngrade;
+	            }
+	            if (requestOptions.maxRedirects != null) {
+	                this._maxRedirects = Math.max(requestOptions.maxRedirects, 0);
+	            }
+	            if (requestOptions.keepAlive != null) {
+	                this._keepAlive = requestOptions.keepAlive;
+	            }
+	            if (requestOptions.allowRetries != null) {
+	                this._allowRetries = requestOptions.allowRetries;
+	            }
+	            if (requestOptions.maxRetries != null) {
+	                this._maxRetries = requestOptions.maxRetries;
+	            }
+	        }
+	    }
+	    options(requestUrl, additionalHeaders) {
+	        return __awaiter(this, void 0, void 0, function* () {
+	            return this.request('OPTIONS', requestUrl, null, additionalHeaders || {});
+	        });
+	    }
+	    get(requestUrl, additionalHeaders) {
+	        return __awaiter(this, void 0, void 0, function* () {
+	            return this.request('GET', requestUrl, null, additionalHeaders || {});
+	        });
+	    }
+	    del(requestUrl, additionalHeaders) {
+	        return __awaiter(this, void 0, void 0, function* () {
+	            return this.request('DELETE', requestUrl, null, additionalHeaders || {});
+	        });
+	    }
+	    post(requestUrl, data, additionalHeaders) {
+	        return __awaiter(this, void 0, void 0, function* () {
+	            return this.request('POST', requestUrl, data, additionalHeaders || {});
+	        });
+	    }
+	    patch(requestUrl, data, additionalHeaders) {
+	        return __awaiter(this, void 0, void 0, function* () {
+	            return this.request('PATCH', requestUrl, data, additionalHeaders || {});
+	        });
+	    }
+	    put(requestUrl, data, additionalHeaders) {
+	        return __awaiter(this, void 0, void 0, function* () {
+	            return this.request('PUT', requestUrl, data, additionalHeaders || {});
+	        });
+	    }
+	    head(requestUrl, additionalHeaders) {
+	        return __awaiter(this, void 0, void 0, function* () {
+	            return this.request('HEAD', requestUrl, null, additionalHeaders || {});
+	        });
+	    }
+	    sendStream(verb, requestUrl, stream, additionalHeaders) {
+	        return __awaiter(this, void 0, void 0, function* () {
+	            return this.request(verb, requestUrl, stream, additionalHeaders);
+	        });
+	    }
+	    /**
+	     * Gets a typed object from an endpoint
+	     * Be aware that not found returns a null.  Other errors (4xx, 5xx) reject the promise
+	     */
+	    getJson(requestUrl_1) {
+	        return __awaiter(this, arguments, void 0, function* (requestUrl, additionalHeaders = {}) {
+	            additionalHeaders[Headers.Accept] = this._getExistingOrDefaultHeader(additionalHeaders, Headers.Accept, MediaTypes.ApplicationJson);
+	            const res = yield this.get(requestUrl, additionalHeaders);
+	            return this._processResponse(res, this.requestOptions);
+	        });
+	    }
+	    postJson(requestUrl_1, obj_1) {
+	        return __awaiter(this, arguments, void 0, function* (requestUrl, obj, additionalHeaders = {}) {
+	            const data = JSON.stringify(obj, null, 2);
+	            additionalHeaders[Headers.Accept] = this._getExistingOrDefaultHeader(additionalHeaders, Headers.Accept, MediaTypes.ApplicationJson);
+	            additionalHeaders[Headers.ContentType] =
+	                this._getExistingOrDefaultContentTypeHeader(additionalHeaders, MediaTypes.ApplicationJson);
+	            const res = yield this.post(requestUrl, data, additionalHeaders);
+	            return this._processResponse(res, this.requestOptions);
+	        });
+	    }
+	    putJson(requestUrl_1, obj_1) {
+	        return __awaiter(this, arguments, void 0, function* (requestUrl, obj, additionalHeaders = {}) {
+	            const data = JSON.stringify(obj, null, 2);
+	            additionalHeaders[Headers.Accept] = this._getExistingOrDefaultHeader(additionalHeaders, Headers.Accept, MediaTypes.ApplicationJson);
+	            additionalHeaders[Headers.ContentType] =
+	                this._getExistingOrDefaultContentTypeHeader(additionalHeaders, MediaTypes.ApplicationJson);
+	            const res = yield this.put(requestUrl, data, additionalHeaders);
+	            return this._processResponse(res, this.requestOptions);
+	        });
+	    }
+	    patchJson(requestUrl_1, obj_1) {
+	        return __awaiter(this, arguments, void 0, function* (requestUrl, obj, additionalHeaders = {}) {
+	            const data = JSON.stringify(obj, null, 2);
+	            additionalHeaders[Headers.Accept] = this._getExistingOrDefaultHeader(additionalHeaders, Headers.Accept, MediaTypes.ApplicationJson);
+	            additionalHeaders[Headers.ContentType] =
+	                this._getExistingOrDefaultContentTypeHeader(additionalHeaders, MediaTypes.ApplicationJson);
+	            const res = yield this.patch(requestUrl, data, additionalHeaders);
+	            return this._processResponse(res, this.requestOptions);
+	        });
+	    }
+	    /**
+	     * Makes a raw http request.
+	     * All other methods such as get, post, patch, and request ultimately call this.
+	     * Prefer get, del, post and patch
+	     */
+	    request(verb, requestUrl, data, headers) {
+	        return __awaiter(this, void 0, void 0, function* () {
+	            if (this._disposed) {
+	                throw new Error('Client has already been disposed.');
+	            }
+	            const parsedUrl = new URL(requestUrl);
+	            let info = this._prepareRequest(verb, parsedUrl, headers);
+	            // Only perform retries on reads since writes may not be idempotent.
+	            const maxTries = this._allowRetries && RetryableHttpVerbs.includes(verb)
+	                ? this._maxRetries + 1
+	                : 1;
+	            let numTries = 0;
+	            let response;
+	            do {
+	                response = yield this.requestRaw(info, data);
+	                // Check if it's an authentication challenge
+	                if (response &&
+	                    response.message &&
+	                    response.message.statusCode === HttpCodes.Unauthorized) {
+	                    let authenticationHandler;
+	                    for (const handler of this.handlers) {
+	                        if (handler.canHandleAuthentication(response)) {
+	                            authenticationHandler = handler;
+	                            break;
+	                        }
+	                    }
+	                    if (authenticationHandler) {
+	                        return authenticationHandler.handleAuthentication(this, info, data);
+	                    }
+	                    else {
+	                        // We have received an unauthorized response but have no handlers to handle it.
+	                        // Let the response return to the caller.
+	                        return response;
+	                    }
+	                }
+	                let redirectsRemaining = this._maxRedirects;
+	                while (response.message.statusCode &&
+	                    HttpRedirectCodes.includes(response.message.statusCode) &&
+	                    this._allowRedirects &&
+	                    redirectsRemaining > 0) {
+	                    const redirectUrl = response.message.headers['location'];
+	                    if (!redirectUrl) {
+	                        // if there's no location to redirect to, we won't
+	                        break;
+	                    }
+	                    const parsedRedirectUrl = new URL(redirectUrl);
+	                    if (parsedUrl.protocol === 'https:' &&
+	                        parsedUrl.protocol !== parsedRedirectUrl.protocol &&
+	                        !this._allowRedirectDowngrade) {
+	                        throw new Error('Redirect from HTTPS to HTTP protocol. This downgrade is not allowed for security reasons. If you want to allow this behavior, set the allowRedirectDowngrade option to true.');
+	                    }
+	                    // we need to finish reading the response before reassigning response
+	                    // which will leak the open socket.
+	                    yield response.readBody();
+	                    // strip authorization header if redirected to a different hostname
+	                    if (parsedRedirectUrl.hostname !== parsedUrl.hostname) {
+	                        for (const header in headers) {
+	                            // header names are case insensitive
+	                            if (header.toLowerCase() === 'authorization') {
+	                                delete headers[header];
+	                            }
+	                        }
+	                    }
+	                    // let's make the request with the new redirectUrl
+	                    info = this._prepareRequest(verb, parsedRedirectUrl, headers);
+	                    response = yield this.requestRaw(info, data);
+	                    redirectsRemaining--;
+	                }
+	                if (!response.message.statusCode ||
+	                    !HttpResponseRetryCodes.includes(response.message.statusCode)) {
+	                    // If not a retry code, return immediately instead of retrying
+	                    return response;
+	                }
+	                numTries += 1;
+	                if (numTries < maxTries) {
+	                    yield response.readBody();
+	                    yield this._performExponentialBackoff(numTries);
+	                }
+	            } while (numTries < maxTries);
+	            return response;
+	        });
+	    }
+	    /**
+	     * Needs to be called if keepAlive is set to true in request options.
+	     */
+	    dispose() {
+	        if (this._agent) {
+	            this._agent.destroy();
+	        }
+	        this._disposed = true;
+	    }
+	    /**
+	     * Raw request.
+	     * @param info
+	     * @param data
+	     */
+	    requestRaw(info, data) {
+	        return __awaiter(this, void 0, void 0, function* () {
+	            return new Promise((resolve, reject) => {
+	                function callbackForResult(err, res) {
+	                    if (err) {
+	                        reject(err);
+	                    }
+	                    else if (!res) {
+	                        // If `err` is not passed, then `res` must be passed.
+	                        reject(new Error('Unknown error'));
+	                    }
+	                    else {
+	                        resolve(res);
+	                    }
+	                }
+	                this.requestRawWithCallback(info, data, callbackForResult);
+	            });
+	        });
+	    }
+	    /**
+	     * Raw request with callback.
+	     * @param info
+	     * @param data
+	     * @param onResult
+	     */
+	    requestRawWithCallback(info, data, onResult) {
+	        if (typeof data === 'string') {
+	            if (!info.options.headers) {
+	                info.options.headers = {};
+	            }
+	            info.options.headers['Content-Length'] = Buffer.byteLength(data, 'utf8');
+	        }
+	        let callbackCalled = false;
+	        function handleResult(err, res) {
+	            if (!callbackCalled) {
+	                callbackCalled = true;
+	                onResult(err, res);
+	            }
+	        }
+	        const req = info.httpModule.request(info.options, (msg) => {
+	            const res = new HttpClientResponse(msg);
+	            handleResult(undefined, res);
+	        });
+	        let socket;
+	        req.on('socket', sock => {
+	            socket = sock;
+	        });
+	        // If we ever get disconnected, we want the socket to timeout eventually
+	        req.setTimeout(this._socketTimeout || 3 * 60000, () => {
+	            if (socket) {
+	                socket.end();
+	            }
+	            handleResult(new Error(`Request timeout: ${info.options.path}`));
+	        });
+	        req.on('error', function (err) {
+	            // err has statusCode property
+	            // res should have headers
+	            handleResult(err);
+	        });
+	        if (data && typeof data === 'string') {
+	            req.write(data, 'utf8');
+	        }
+	        if (data && typeof data !== 'string') {
+	            data.on('close', function () {
+	                req.end();
+	            });
+	            data.pipe(req);
+	        }
+	        else {
+	            req.end();
+	        }
+	    }
+	    /**
+	     * Gets an http agent. This function is useful when you need an http agent that handles
+	     * routing through a proxy server - depending upon the url and proxy environment variables.
+	     * @param serverUrl  The server URL where the request will be sent. For example, https://api.github.com
+	     */
+	    getAgent(serverUrl) {
+	        const parsedUrl = new URL(serverUrl);
+	        return this._getAgent(parsedUrl);
+	    }
+	    getAgentDispatcher(serverUrl) {
+	        const parsedUrl = new URL(serverUrl);
+	        const proxyUrl = pm.getProxyUrl(parsedUrl);
+	        const useProxy = proxyUrl && proxyUrl.hostname;
+	        if (!useProxy) {
+	            return;
+	        }
+	        return this._getProxyAgentDispatcher(parsedUrl, proxyUrl);
+	    }
+	    _prepareRequest(method, requestUrl, headers) {
+	        const info = {};
+	        info.parsedUrl = requestUrl;
+	        const usingSsl = info.parsedUrl.protocol === 'https:';
+	        info.httpModule = usingSsl ? https$1 : http$1;
+	        const defaultPort = usingSsl ? 443 : 80;
+	        info.options = {};
+	        info.options.host = info.parsedUrl.hostname;
+	        info.options.port = info.parsedUrl.port
+	            ? parseInt(info.parsedUrl.port)
+	            : defaultPort;
+	        info.options.path =
+	            (info.parsedUrl.pathname || '') + (info.parsedUrl.search || '');
+	        info.options.method = method;
+	        info.options.headers = this._mergeHeaders(headers);
+	        if (this.userAgent != null) {
+	            info.options.headers['user-agent'] = this.userAgent;
+	        }
+	        info.options.agent = this._getAgent(info.parsedUrl);
+	        // gives handlers an opportunity to participate
+	        if (this.handlers) {
+	            for (const handler of this.handlers) {
+	                handler.prepareRequest(info.options);
+	            }
+	        }
+	        return info;
+	    }
+	    _mergeHeaders(headers) {
+	        if (this.requestOptions && this.requestOptions.headers) {
+	            return Object.assign({}, lowercaseKeys(this.requestOptions.headers), lowercaseKeys(headers || {}));
+	        }
+	        return lowercaseKeys(headers || {});
+	    }
+	    /**
+	     * Gets an existing header value or returns a default.
+	     * Handles converting number header values to strings since HTTP headers must be strings.
+	     * Note: This returns string | string[] since some headers can have multiple values.
+	     * For headers that must always be a single string (like Content-Type), use the
+	     * specialized _getExistingOrDefaultContentTypeHeader method instead.
+	     */
+	    _getExistingOrDefaultHeader(additionalHeaders, header, _default) {
+	        let clientHeader;
+	        if (this.requestOptions && this.requestOptions.headers) {
+	            const headerValue = lowercaseKeys(this.requestOptions.headers)[header];
+	            if (headerValue) {
+	                clientHeader =
+	                    typeof headerValue === 'number' ? headerValue.toString() : headerValue;
+	            }
+	        }
+	        const additionalValue = additionalHeaders[header];
+	        if (additionalValue !== undefined) {
+	            return typeof additionalValue === 'number'
+	                ? additionalValue.toString()
+	                : additionalValue;
+	        }
+	        if (clientHeader !== undefined) {
+	            return clientHeader;
+	        }
+	        return _default;
+	    }
+	    /**
+	     * Specialized version of _getExistingOrDefaultHeader for Content-Type header.
+	     * Always returns a single string (not an array) since Content-Type should be a single value.
+	     * Converts arrays to comma-separated strings and numbers to strings to ensure type safety.
+	     * This was split from _getExistingOrDefaultHeader to provide stricter typing for callers
+	     * that assign the result to places expecting a string (e.g., additionalHeaders[Headers.ContentType]).
+	     */
+	    _getExistingOrDefaultContentTypeHeader(additionalHeaders, _default) {
+	        let clientHeader;
+	        if (this.requestOptions && this.requestOptions.headers) {
+	            const headerValue = lowercaseKeys(this.requestOptions.headers)[Headers.ContentType];
+	            if (headerValue) {
+	                if (typeof headerValue === 'number') {
+	                    clientHeader = String(headerValue);
+	                }
+	                else if (Array.isArray(headerValue)) {
+	                    clientHeader = headerValue.join(', ');
+	                }
+	                else {
+	                    clientHeader = headerValue;
+	                }
+	            }
+	        }
+	        const additionalValue = additionalHeaders[Headers.ContentType];
+	        // Return the first non-undefined value, converting numbers or arrays to strings if necessary
+	        if (additionalValue !== undefined) {
+	            if (typeof additionalValue === 'number') {
+	                return String(additionalValue);
+	            }
+	            else if (Array.isArray(additionalValue)) {
+	                return additionalValue.join(', ');
+	            }
+	            else {
+	                return additionalValue;
+	            }
+	        }
+	        if (clientHeader !== undefined) {
+	            return clientHeader;
+	        }
+	        return _default;
+	    }
+	    _getAgent(parsedUrl) {
+	        let agent;
+	        const proxyUrl = pm.getProxyUrl(parsedUrl);
+	        const useProxy = proxyUrl && proxyUrl.hostname;
+	        if (this._keepAlive && useProxy) {
+	            agent = this._proxyAgent;
+	        }
+	        if (!useProxy) {
+	            agent = this._agent;
+	        }
+	        // if agent is already assigned use that agent.
+	        if (agent) {
+	            return agent;
+	        }
+	        const usingSsl = parsedUrl.protocol === 'https:';
+	        let maxSockets = 100;
+	        if (this.requestOptions) {
+	            maxSockets = this.requestOptions.maxSockets || http$1.globalAgent.maxSockets;
+	        }
+	        // This is `useProxy` again, but we need to check `proxyURl` directly for TypeScripts's flow analysis.
+	        if (proxyUrl && proxyUrl.hostname) {
+	            const agentOptions = {
+	                maxSockets,
+	                keepAlive: this._keepAlive,
+	                proxy: Object.assign(Object.assign({}, ((proxyUrl.username || proxyUrl.password) && {
+	                    proxyAuth: `${proxyUrl.username}:${proxyUrl.password}`
+	                })), { host: proxyUrl.hostname, port: proxyUrl.port })
+	            };
+	            let tunnelAgent;
+	            const overHttps = proxyUrl.protocol === 'https:';
+	            if (usingSsl) {
+	                tunnelAgent = overHttps ? tunnel.httpsOverHttps : tunnel.httpsOverHttp;
+	            }
+	            else {
+	                tunnelAgent = overHttps ? tunnel.httpOverHttps : tunnel.httpOverHttp;
+	            }
+	            agent = tunnelAgent(agentOptions);
+	            this._proxyAgent = agent;
+	        }
+	        // if tunneling agent isn't assigned create a new agent
+	        if (!agent) {
+	            const options = { keepAlive: this._keepAlive, maxSockets };
+	            agent = usingSsl ? new https$1.Agent(options) : new http$1.Agent(options);
+	            this._agent = agent;
+	        }
+	        if (usingSsl && this._ignoreSslError) {
+	            // we don't want to set NODE_TLS_REJECT_UNAUTHORIZED=0 since that will affect request for entire process
+	            // http.RequestOptions doesn't expose a way to modify RequestOptions.agent.options
+	            // we have to cast it to any and change it directly
+	            agent.options = Object.assign(agent.options || {}, {
+	                rejectUnauthorized: false
+	            });
+	        }
+	        return agent;
+	    }
+	    _getProxyAgentDispatcher(parsedUrl, proxyUrl) {
+	        let proxyAgent;
+	        if (this._keepAlive) {
+	            proxyAgent = this._proxyAgentDispatcher;
+	        }
+	        // if agent is already assigned use that agent.
+	        if (proxyAgent) {
+	            return proxyAgent;
+	        }
+	        const usingSsl = parsedUrl.protocol === 'https:';
+	        proxyAgent = new undici_1.ProxyAgent(Object.assign({ uri: proxyUrl.href, pipelining: !this._keepAlive ? 0 : 1 }, ((proxyUrl.username || proxyUrl.password) && {
+	            token: `Basic ${Buffer.from(`${proxyUrl.username}:${proxyUrl.password}`).toString('base64')}`
+	        })));
+	        this._proxyAgentDispatcher = proxyAgent;
+	        if (usingSsl && this._ignoreSslError) {
+	            // we don't want to set NODE_TLS_REJECT_UNAUTHORIZED=0 since that will affect request for entire process
+	            // http.RequestOptions doesn't expose a way to modify RequestOptions.agent.options
+	            // we have to cast it to any and change it directly
+	            proxyAgent.options = Object.assign(proxyAgent.options.requestTls || {}, {
+	                rejectUnauthorized: false
+	            });
+	        }
+	        return proxyAgent;
+	    }
+	    _getUserAgentWithOrchestrationId(userAgent) {
+	        const baseUserAgent = userAgent || 'actions/http-client';
+	        const orchId = process.env['ACTIONS_ORCHESTRATION_ID'];
+	        if (orchId) {
+	            // Sanitize the orchestration ID to ensure it contains only valid characters
+	            // Valid characters: 0-9, a-z, _, -, .
+	            const sanitizedId = orchId.replace(/[^a-z0-9_.-]/gi, '_');
+	            return `${baseUserAgent} actions_orchestration_id/${sanitizedId}`;
+	        }
+	        return baseUserAgent;
+	    }
+	    _performExponentialBackoff(retryNumber) {
+	        return __awaiter(this, void 0, void 0, function* () {
+	            retryNumber = Math.min(ExponentialBackoffCeiling, retryNumber);
+	            const ms = ExponentialBackoffTimeSlice * Math.pow(2, retryNumber);
+	            return new Promise(resolve => setTimeout(() => resolve(), ms));
+	        });
+	    }
+	    _processResponse(res, options) {
+	        return __awaiter(this, void 0, void 0, function* () {
+	            return new Promise((resolve, reject) => __awaiter(this, void 0, void 0, function* () {
+	                const statusCode = res.message.statusCode || 0;
+	                const response = {
+	                    statusCode,
+	                    result: null,
+	                    headers: {}
+	                };
+	                // not found leads to null obj returned
+	                if (statusCode === HttpCodes.NotFound) {
+	                    resolve(response);
+	                }
+	                // get the result from the body
+	                function dateTimeDeserializer(key, value) {
+	                    if (typeof value === 'string') {
+	                        const a = new Date(value);
+	                        if (!isNaN(a.valueOf())) {
+	                            return a;
+	                        }
+	                    }
+	                    return value;
+	                }
+	                let obj;
+	                let contents;
+	                try {
+	                    contents = yield res.readBody();
+	                    if (contents && contents.length > 0) {
+	                        if (options && options.deserializeDates) {
+	                            obj = JSON.parse(contents, dateTimeDeserializer);
+	                        }
+	                        else {
+	                            obj = JSON.parse(contents);
+	                        }
+	                        response.result = obj;
+	                    }
+	                    response.headers = res.message.headers;
+	                }
+	                catch (err) {
+	                    // Invalid resource (contents not json);  leaving result obj null
+	                }
+	                // note that 3xx redirects are handled by the http layer.
+	                if (statusCode > 299) {
+	                    let msg;
+	                    // if exception/error in body, attempt to get better error
+	                    if (obj && obj.message) {
+	                        msg = obj.message;
+	                    }
+	                    else if (contents && contents.length > 0) {
+	                        // it may be the case that the exception is in the body message as string
+	                        msg = contents;
+	                    }
+	                    else {
+	                        msg = `Failed request: (${statusCode})`;
+	                    }
+	                    const err = new HttpClientError(msg, statusCode);
+	                    err.result = response.result;
+	                    reject(err);
+	                }
+	                else {
+	                    resolve(response);
+	                }
+	            }));
+	        });
+	    }
+	}
+	lib.HttpClient = HttpClient;
+	const lowercaseKeys = (obj) => Object.keys(obj).reduce((c, k) => ((c[k.toLowerCase()] = obj[k]), c), {});
+	
+	return lib;
+}
+
+var libExports = requireLib();
+
 var undiciExports = requireUndici();
 
 var __awaiter = (undefined && undefined.__awaiter) || function (thisArg, _arguments, P, generator) {
@@ -56661,11 +57319,11 @@ function getAuthString(token, options) {
     return typeof options.auth === 'string' ? options.auth : `token ${token}`;
 }
 function getProxyAgent(destinationUrl) {
-    const hc = new HttpClient();
+    const hc = new libExports.HttpClient();
     return hc.getAgent(destinationUrl);
 }
 function getProxyAgentDispatcher(destinationUrl) {
-    const hc = new HttpClient();
+    const hc = new libExports.HttpClient();
     return hc.getAgentDispatcher(destinationUrl);
 }
 function getProxyFetch(destinationUrl) {
@@ -57093,7 +57751,7 @@ function expand(template, context) {
 }
 
 // pkg/dist-src/parse.js
-function parse(options) {
+function parse$1(options) {
   let method = options.method.toUpperCase();
   let url = (options.url || "/").replace(/:([a-z]\w+)/g, "{$1}");
   let headers = Object.assign({}, options.headers);
@@ -57159,7 +57817,7 @@ function parse(options) {
 
 // pkg/dist-src/endpoint-with-defaults.js
 function endpointWithDefaults(defaults, route, options) {
-  return parse(merge(defaults, route, options));
+  return parse$1(merge(defaults, route, options));
 }
 
 // pkg/dist-src/with-defaults.js
@@ -57170,193 +57828,137 @@ function withDefaults$2(oldDefaults, newDefaults) {
     DEFAULTS: DEFAULTS2,
     defaults: withDefaults$2.bind(null, DEFAULTS2),
     merge: merge.bind(null, DEFAULTS2),
-    parse
+    parse: parse$1
   });
 }
 
 // pkg/dist-src/index.js
 var endpoint = withDefaults$2(null, DEFAULTS);
 
-var dist = {};
-
-var hasRequiredDist;
-
-function requireDist () {
-	if (hasRequiredDist) return dist;
-	hasRequiredDist = 1;
-	/*!
-	 * content-type
-	 * Copyright(c) 2015 Douglas Christopher Wilson
-	 * MIT Licensed
-	 */
-	Object.defineProperty(dist, "__esModule", { value: true });
-	dist.format = format;
-	dist.parse = parse;
-	const TEXT_REGEXP = /^[\u0009\u0020-\u007e\u0080-\u00ff]*$/;
-	const TOKEN_REGEXP = /^[!#$%&'*+.^_`|~0-9A-Za-z-]+$/;
-	/**
-	 * RegExp to match chars that must be quoted-pair in RFC 9110 sec 5.6.4
-	 */
-	const QUOTE_REGEXP = /[\\"]/g;
-	/**
-	 * RegExp to match type in RFC 9110 sec 8.3.1
-	 *
-	 * media-type = type "/" subtype
-	 * type       = token
-	 * subtype    = token
-	 */
-	const TYPE_REGEXP = /^[!#$%&'*+.^_`|~0-9A-Za-z-]+\/[!#$%&'*+.^_`|~0-9A-Za-z-]+$/;
-	/**
-	 * Null object perf optimization. Faster than `Object.create(null)` and `{ __proto__: null }`.
-	 */
-	const NullObject = /* @__PURE__ */ (() => {
-	    const C = function () { };
-	    C.prototype = Object.create(null);
-	    return C;
-	})();
-	/**
-	 * Format an object into a `Content-Type` header.
-	 */
-	function format(obj) {
-	    const { type, parameters } = obj;
-	    if (!type || !TYPE_REGEXP.test(type)) {
-	        throw new TypeError(`Invalid type: ${type}`);
-	    }
-	    let result = type;
-	    if (parameters) {
-	        for (const param of Object.keys(parameters)) {
-	            if (!TOKEN_REGEXP.test(param)) {
-	                throw new TypeError(`Invalid parameter name: ${param}`);
-	            }
-	            result += `; ${param}=${qstring(parameters[param])}`;
-	        }
-	    }
-	    return result;
-	}
-	/**
-	 * Parse a `Content-Type` header.
-	 */
-	function parse(header, options) {
-	    const len = header.length;
-	    let index = skipOWS(header, 0, len);
-	    const valueStart = index;
-	    index = skipValue(header, index, len);
-	    const valueEnd = trailingOWS(header, valueStart, index);
-	    const type = header.slice(valueStart, valueEnd).toLowerCase();
-	    const parameters = options?.parameters === false
-	        ? new NullObject()
-	        : parseParameters(header, index, len);
-	    return { type, parameters };
-	}
-	const SP = 32; // " "
-	const HTAB = 9; // "\t"
-	const SEMI = 59; // ";"
-	const EQ = 61; // "="
-	const DQUOTE = 34; // '"'
-	const BSLASH = 92; // "\\"
-	/**
-	 * Parses the parameters of a `Content-Type` header starting at the given index.
-	 */
-	function parseParameters(header, index, len) {
-	    const parameters = new NullObject();
-	    parameter: while (index < len) {
-	        index = skipOWS(header, index + 1 /* Skip over ; */, len);
-	        const keyStart = index;
-	        while (index < len) {
-	            const code = header.charCodeAt(index);
-	            if (code === SEMI)
-	                continue parameter;
-	            if (code === EQ) {
-	                const keyEnd = trailingOWS(header, keyStart, index);
-	                const key = header.slice(keyStart, keyEnd).toLowerCase();
-	                index = skipOWS(header, index + 1, len);
-	                if (index < len && header.charCodeAt(index) === DQUOTE) {
-	                    index++;
-	                    let value = "";
-	                    while (index < len) {
-	                        const code = header.charCodeAt(index++);
-	                        if (code === DQUOTE) {
-	                            index = skipValue(header, index, len);
-	                            if (parameters[key] === undefined)
-	                                parameters[key] = value;
-	                            break;
-	                        }
-	                        if (code === BSLASH && index < len) {
-	                            value += header[index++];
-	                            continue;
-	                        }
-	                        value += String.fromCharCode(code);
-	                    }
-	                    continue parameter;
-	                }
-	                const valueStart = index;
-	                index = skipValue(header, index, len);
-	                if (parameters[key] === undefined) {
-	                    const valueEnd = trailingOWS(header, valueStart, index);
-	                    parameters[key] = header.slice(valueStart, valueEnd);
-	                }
-	                continue parameter;
-	            }
-	            index++;
-	        }
-	    }
-	    return parameters;
-	}
-	/**
-	 * Skip over characters until a semicolon.
-	 */
-	function skipValue(str, index, len) {
-	    while (index < len) {
-	        const char = str.charCodeAt(index);
-	        if (char === SEMI)
-	            break;
-	        index++;
-	    }
-	    return index;
-	}
-	/**
-	 * Skip optional whitespace (OWS) in an HTTP header value.
-	 *
-	 * OWS is defined in RFC 9110 sec 5.6.3 as SP (" ") or HTAB ("\t").
-	 */
-	function skipOWS(header, index, len) {
-	    while (index < len) {
-	        const char = header.charCodeAt(index);
-	        if (char !== SP && char !== HTAB)
-	            break;
-	        index++;
-	    }
-	    return index;
-	}
-	/**
-	 * Trim optional whitespace (OWS) from the end of a substring.
-	 *
-	 * OWS is defined in RFC 9110 sec 5.6.3 as SP (" ") or HTAB ("\t").
-	 */
-	function trailingOWS(header, start, end) {
-	    while (end > start) {
-	        const char = header.charCodeAt(end - 1);
-	        if (char !== SP && char !== HTAB)
-	            break;
-	        end--;
-	    }
-	    return end;
-	}
-	/**
-	 * Serialize a parameter value.
-	 */
-	function qstring(str) {
-	    if (TOKEN_REGEXP.test(str))
-	        return str;
-	    if (TEXT_REGEXP.test(str))
-	        return `"${str.replace(QUOTE_REGEXP, "\\$&")}"`;
-	    throw new TypeError(`Invalid parameter value: ${str}`);
-	}
-	
-	return dist;
+/*!
+ * content-type
+ * Copyright(c) 2015 Douglas Christopher Wilson
+ * MIT Licensed
+ */
+/**
+ * Null object perf optimization. Faster than `Object.create(null)` and `{ __proto__: null }`.
+ */
+const NullObject = /* @__PURE__ */ (() => {
+    const C = function () { };
+    C.prototype = Object.create(null);
+    return C;
+})();
+/**
+ * Parse a `Content-Type` header.
+ */
+function parse(header, options) {
+    const stopChar = 65_536; // Sentinel for "no stop char".
+    const len = header.length;
+    let index = skipOWS(header, 0, len);
+    const valueStart = index;
+    index = skipValue(header, index, len, stopChar);
+    const valueEnd = trailingOWS(header, valueStart, index);
+    const type = header.slice(valueStart, valueEnd).toLowerCase();
+    return parseParameters(header, type, index, len, stopChar);
 }
-
-var distExports = requireDist();
+const SP = 32; // " "
+const HTAB = 9; // "\t"
+const SEMI = 59; // ";"
+const EQ = 61; // "="
+const DQUOTE = 34; // '"'
+const BSLASH = 92; // "\\"
+/**
+ * Parses the parameters of a `Content-Type` header starting at the given index.
+ */
+function parseParameters(header, type, index, len, stopChar) {
+    const parameters = new NullObject();
+    parameter: while (index < len) {
+        if (header.charCodeAt(index) === stopChar)
+            break;
+        index = skipOWS(header, index + 1 /* Skip over ; */, len);
+        const keyStart = index;
+        while (index < len) {
+            const code = header.charCodeAt(index);
+            if (code === stopChar)
+                break parameter;
+            if (code === SEMI)
+                continue parameter;
+            if (code === EQ) {
+                const keyEnd = trailingOWS(header, keyStart, index);
+                const key = header.slice(keyStart, keyEnd).toLowerCase();
+                index = skipOWS(header, index + 1, len);
+                if (index < len && header.charCodeAt(index) === DQUOTE) {
+                    index++;
+                    let value = "";
+                    while (index < len) {
+                        const code = header.charCodeAt(index++);
+                        if (code === DQUOTE) {
+                            index = skipValue(header, index, len, stopChar);
+                            if (parameters[key] === undefined)
+                                parameters[key] = value;
+                            break;
+                        }
+                        if (code === BSLASH && index < len) {
+                            value += header[index++];
+                            continue;
+                        }
+                        value += String.fromCharCode(code);
+                    }
+                    continue parameter;
+                }
+                const valueStart = index;
+                index = skipValue(header, index, len, stopChar);
+                if (parameters[key] === undefined) {
+                    const valueEnd = trailingOWS(header, valueStart, index);
+                    parameters[key] = header.slice(valueStart, valueEnd);
+                }
+                continue parameter;
+            }
+            index++;
+        }
+    }
+    return { type, index, parameters };
+}
+/**
+ * Skip over characters until a semicolon or other exit character.
+ */
+function skipValue(str, index, len, stopChar) {
+    while (index < len) {
+        const code = str.charCodeAt(index);
+        if (code === SEMI || code === stopChar)
+            break;
+        index++;
+    }
+    return index;
+}
+/**
+ * Skip optional whitespace (OWS) in an HTTP header value.
+ *
+ * OWS is defined in RFC 9110 sec 5.6.3 as SP (" ") or HTAB ("\t").
+ */
+function skipOWS(header, index, len) {
+    while (index < len) {
+        const char = header.charCodeAt(index);
+        if (char !== SP && char !== HTAB)
+            break;
+        index++;
+    }
+    return index;
+}
+/**
+ * Trim optional whitespace (OWS) from the end of a substring.
+ *
+ * OWS is defined in RFC 9110 sec 5.6.3 as SP (" ") or HTAB ("\t").
+ */
+function trailingOWS(header, start, end) {
+    while (end > start) {
+        const char = header.charCodeAt(end - 1);
+        if (char !== SP && char !== HTAB)
+            break;
+        end--;
+    }
+    return end;
+}
 
 const intRegex = /^-?\d+$/;
 const noiseValue = /^-?\d+n+$/; // Noise - strings that match the custom format before being converted to it
@@ -57364,14 +57966,250 @@ const originalStringify = JSON.stringify;
 const originalParse = JSON.parse;
 const customFormat = /^-?\d+n$/;
 
-const bigIntsStringify = /([\[:])?"(-?\d+)n"($|([\\n]|\s)*(\s|[\\n])*[,\}\]])/g;
-const noiseStringify =
-  /([\[:])?("-?\d+n+)n("$|"([\\n]|\s)*(\s|[\\n])*[,\}\]])/g;
+const bigIntsStringify = /([\[:])?"(-?\d+)n"($|\s*[,\}\]])/g;
+const noiseStringify = /([\[:])?("-?\d+n+)n("$|"\s*[,\}\]])/g;
 
 /**
  * @typedef {(this: any, key: string | number | undefined, value: any) => any} Replacer
  * @typedef {(key: string | number | undefined, value: any, context?: { source: string }) => any} Reviver
  */
+
+/**
+ * Checks if a value is unstringifiable according to native JSON.stringify rules.
+ *
+ * @param {any} val The value to check.
+ * @returns {boolean} True if the value is undefined, a function, or a symbol.
+ */
+const isUnstringifiable = (val) =>
+  val === undefined || typeof val === "function" || typeof val === "symbol";
+
+/**
+ * Checks if a value is a native JSON.rawJSON object (Node.js 22+).
+ *
+ * @param {any} val The value to check.
+ * @returns {boolean} True if the value is a RawJSON instance.
+ */
+const isRawJSON = (val) =>
+  val !== null &&
+  typeof val === "object" &&
+  val.constructor &&
+  val.constructor.name === "RawJSON";
+
+/**
+ * Iteratively converts a JS value to a JSON string.
+ * Used as a fallback when the native JSON.stringify hits the Maximum Call Stack size.
+ * Fully compliant with JSON formatting (space), replacers, and toJSON behaviors.
+ *
+ * @param {any} rootValue The value to stringify.
+ * @param {Replacer | Array<string | number> | null} [replacer] User's custom replacer function.
+ * @param {string | number} [spaceParam] Indentation for pretty-printing.
+ * @returns {string | undefined} The generated JSON string.
+ */
+const stringifyIteratively = (rootValue, replacer, spaceParam) => {
+  let space = "";
+  const propertyList = Array.isArray(replacer)
+    ? new Set(replacer.map(String))
+    : null;
+
+  /**
+   * Prepares a value for stringification by resolving toJSON, handling BigInts,
+   * applying custom replacers, and unwrapping primitive objects.
+   *
+   * @param {object|Array} parent The parent object or array holding the value.
+   * @param {string} key The key associated with the value.
+   * @param {any} val The raw value to process.
+   * @returns {any} The processed value ready for stringification.
+   */
+  const prepareVal = (parent, key, val) => {
+    const isObject = val !== null && typeof val === "object";
+    const hasToJSON = isObject && typeof val.toJSON === "function";
+
+    if (hasToJSON) {
+      val = val.toJSON(key);
+    }
+
+    const isNoise = typeof val === "string" && noiseValue.test(val);
+
+    if (isNoise) return val + "n";
+
+    const isBigInt = typeof val === "bigint";
+
+    if (isBigInt) {
+      const supportsRawJSON = "rawJSON" in JSON;
+
+      if (supportsRawJSON) return JSON.rawJSON(val.toString());
+
+      return val.toString() + "n";
+    }
+
+    const isPostReplacerObject = val !== null && typeof val === "object";
+
+    if (isPostReplacerObject) {
+      const isPrimitiveWrapper =
+        val instanceof Number ||
+        val instanceof String ||
+        val instanceof Boolean;
+
+      if (isPrimitiveWrapper) {
+        val = val.valueOf();
+      }
+    }
+
+    return val;
+  };
+
+  const rootProcessed = prepareVal({ }, "", rootValue);
+
+  if (isUnstringifiable(rootProcessed)) {
+    return undefined;
+  }
+
+  const isRootPrimitive =
+    rootProcessed === null || typeof rootProcessed !== "object";
+  const isRootNativeRawJSON = isRawJSON(rootProcessed);
+
+  if (isRootPrimitive || isRootNativeRawJSON) {
+    return originalStringify(rootProcessed);
+  }
+
+  const chunks = [];
+
+  const stack = [
+    {
+      parent: { "": rootProcessed },
+      key: "",
+      val: rootProcessed,
+      isArray: Array.isArray(rootProcessed),
+      keys: Array.isArray(rootProcessed) ? null : Object.keys(rootProcessed),
+      index: 0,
+      first: true,
+    },
+  ];
+
+  const visited = new WeakSet([rootProcessed]);
+
+  while (stack.length > 0) {
+    const node = stack[stack.length - 1];
+
+    if (node.index === 0) {
+      chunks.push(node.isArray ? "[" : "{");
+    }
+
+    let isDone = false;
+
+    if (node.isArray) {
+      if (node.index < node.val.length) {
+        if (!node.first) chunks.push(",");
+
+        const childRaw = node.val[node.index];
+        const childVal = prepareVal(node.val, String(node.index), childRaw);
+
+        if (isUnstringifiable(childVal)) {
+          chunks.push("null");
+          node.first = false;
+          node.index++;
+        } else {
+          const isComplexObject =
+            childVal !== null && typeof childVal === "object";
+          const isNativeRaw = isRawJSON(childVal);
+
+          if (isComplexObject && !isNativeRaw) {
+            if (visited.has(childVal)) {
+              throw new TypeError("Converting circular structure to JSON");
+            }
+
+            visited.add(childVal);
+
+            stack.push({
+              parent: node.val,
+              key: String(node.index),
+              val: childVal,
+              isArray: Array.isArray(childVal),
+              keys: Array.isArray(childVal) ? null : Object.keys(childVal),
+              index: 0,
+              first: true,
+            });
+
+            node.first = false;
+            node.index++;
+          } else {
+            chunks.push(originalStringify(childVal));
+            node.first = false;
+            node.index++;
+          }
+        }
+      } else {
+        isDone = true;
+      }
+    } else {
+      while (node.index < node.keys.length) {
+        const k = node.keys[node.index++];
+
+        const isFilteredOutByArray = propertyList && !propertyList.has(k);
+
+        if (isFilteredOutByArray) continue;
+
+        const childRaw = node.val[k];
+        const childVal = prepareVal(node.val, k, childRaw);
+
+        if (isUnstringifiable(childVal)) continue;
+
+        if (!node.first) chunks.push(",");
+
+        {
+          chunks.push(originalStringify(k) + ":");
+        }
+
+        const isComplexObject =
+          childVal !== null && typeof childVal === "object";
+        const isNativeRaw = isRawJSON(childVal);
+
+        if (isComplexObject && !isNativeRaw) {
+          if (visited.has(childVal)) {
+            throw new TypeError("Converting circular structure to JSON");
+          }
+
+          visited.add(childVal);
+
+          stack.push({
+            parent: node.val,
+            key: k,
+            val: childVal,
+            isArray: Array.isArray(childVal),
+            keys: Array.isArray(childVal) ? null : Object.keys(childVal),
+            index: 0,
+            first: true,
+          });
+
+          node.first = false;
+
+          break; // Stop current loop level to process the newly pushed stack node
+        } else {
+          chunks.push(originalStringify(childVal));
+          node.first = false;
+        }
+      }
+
+      const isNodeFullyProcessed =
+        node.index >= node.keys.length && stack[stack.length - 1] === node;
+
+      if (isNodeFullyProcessed) {
+        isDone = true;
+      }
+    }
+
+    if (isDone) {
+
+      if (!node.first && space) ;
+
+      chunks.push(node.isArray ? "]" : "}");
+      visited.delete(node.val);
+      stack.pop();
+    }
+  }
+
+  return chunks.join("");
+};
 
 /**
  * Converts a JavaScript value to a JSON string.
@@ -57384,51 +58222,87 @@ const noiseStringify =
  *
  * @param {*} value The value to convert to a JSON string.
  * @param {Replacer | Array<string | number> | null} [replacer]
- *   A function that alters the behavior of the stringification process,
- *   or an array of strings/numbers to indicate properties to exclude.
+ * A function that alters the behavior of the stringification process,
+ * or an array of strings/numbers to indicate properties to exclude.
  * @param {string | number} [space]
- *   A string or number to specify indentation or pretty-printing.
+ * A string or number to specify indentation or pretty-printing.
  * @returns {string} The JSON string representation.
  */
 const JSONStringify = (value, replacer, space) => {
-  if ("rawJSON" in JSON) {
-    return originalStringify(
+  try {
+    const supportsRawJSON = "rawJSON" in JSON;
+
+    if (supportsRawJSON) {
+      return originalStringify(
+        value,
+        (key, val) => {
+          if (typeof val === "bigint") return JSON.rawJSON(val.toString());
+
+          const hasFunctionReplacer = typeof replacer === "function";
+
+          if (hasFunctionReplacer) ;
+
+          const isKeyInArrayReplacer =
+            Array.isArray(replacer) && replacer.includes(key);
+
+          if (isKeyInArrayReplacer) return val;
+
+          return val;
+        },
+        space,
+      );
+    }
+
+    if (!value) return originalStringify(value, replacer, space);
+
+    const convertedToCustomJSON = originalStringify(
       value,
-      (key, value) => {
-        if (typeof value === "bigint") return JSON.rawJSON(value.toString());
+      (key, val) => {
+        const isNoise = typeof val === "string" && noiseValue.test(val);
 
-        if (Array.isArray(replacer) && replacer.includes(key)) return value;
+        if (isNoise) return val.toString() + "n"; // Mark noise values with additional "n" to offset the deletion of one "n" during the processing
 
-        return value;
+        if (typeof val === "bigint") return val.toString() + "n";
+
+        const hasFunctionReplacer = typeof replacer === "function";
+
+        if (hasFunctionReplacer) ;
+
+        const isKeyInArrayReplacer =
+          Array.isArray(replacer) && replacer.includes(key);
+
+        if (isKeyInArrayReplacer) return val;
+
+        return val;
       },
       space,
     );
+
+    const processedJSON = convertedToCustomJSON.replace(
+      bigIntsStringify,
+      "$1$2$3",
+    ); // Delete one "n" off the end of every BigInt value
+
+    const denoisedJSON = processedJSON.replace(noiseStringify, "$1$2$3"); // Remove one "n" off the end of every noisy string
+
+    return denoisedJSON;
+  } catch (error) {
+    if (error instanceof RangeError) {
+      const convertedJSON = stringifyIteratively(value, replacer);
+
+      if (convertedJSON === undefined) return undefined;
+
+      const supportsRawJSON = "rawJSON" in JSON;
+
+      if (supportsRawJSON) return convertedJSON;
+
+      const processedJSON = convertedJSON.replace(bigIntsStringify, "$1$2$3");
+
+      return processedJSON.replace(noiseStringify, "$1$2$3");
+    }
+
+    throw error;
   }
-
-  if (!value) return originalStringify(value, replacer, space);
-
-  const convertedToCustomJSON = originalStringify(
-    value,
-    (key, value) => {
-      const isNoise = typeof value === "string" && noiseValue.test(value);
-
-      if (isNoise) return value.toString() + "n"; // Mark noise values with additional "n" to offset the deletion of one "n" during the processing
-
-      if (typeof value === "bigint") return value.toString() + "n";
-
-      if (Array.isArray(replacer) && replacer.includes(key)) return value;
-
-      return value;
-    },
-    space,
-  );
-  const processedJSON = convertedToCustomJSON.replace(
-    bigIntsStringify,
-    "$1$2$3",
-  ); // Delete one "n" off the end of every BigInt value
-  const denoisedJSON = processedJSON.replace(noiseStringify, "$1$2$3"); // Remove one "n" off the end of every noisy string
-
-  return denoisedJSON;
 };
 
 const featureCache = new Map();
@@ -57476,6 +58350,7 @@ const isContextSourceSupported = () => {
 const convertMarkedBigIntsReviver = (key, value, context, userReviver) => {
   const isCustomFormatBigInt =
     typeof value === "string" && customFormat.test(value);
+
   if (isCustomFormatBigInt) return BigInt(value.slice(0, -1));
 
   const isNoiseValue = typeof value === "string" && noiseValue.test(value);
@@ -57497,9 +58372,10 @@ const convertMarkedBigIntsReviver = (key, value, context, userReviver) => {
  */
 const JSONParseV2 = (text, reviver) => {
   return JSON.parse(text, (key, value, context) => {
-    const isBigNumber =
-      typeof value === "number" &&
-      (value > Number.MAX_SAFE_INTEGER || value < Number.MIN_SAFE_INTEGER);
+    const isNumber = typeof value === "number";
+    const isOutOfBounds =
+      value > Number.MAX_SAFE_INTEGER || value < Number.MIN_SAFE_INTEGER;
+    const isBigNumber = isNumber && isOutOfBounds;
     const isInt = context && intRegex.test(context.source);
     const isBigInt = isBigNumber && isInt;
 
@@ -57512,8 +58388,101 @@ const JSONParseV2 = (text, reviver) => {
 const MAX_INT = Number.MAX_SAFE_INTEGER.toString();
 const MAX_DIGITS = MAX_INT.length;
 const stringsOrLargeNumbers =
-  /"(?:\\.|[^"])*"|-?(0|[1-9][0-9]*)(\.[0-9]+)?([eE][+-]?[0-9]+)?/g;
+  /"(?:[^"\\]|\\.)*"|-?(0|[1-9][0-9]*)(\.[0-9]+)?([eE][+-]?[0-9]+)?/g;
 const noiseValueWithQuotes = /^"-?\d+n+"$/; // Noise - strings that match the custom format before being converted to it
+
+/**
+ * Iteratively traverses the parsed object bottom-up (post-order),
+ * emulating the native JSON.parse reviver behavior.
+ * This avoids Call Stack overflows (RangeError) on deeply nested structures.
+ *
+ * @param {any} parsed The natively parsed JSON object.
+ * @param {Reviver} [userReviver] User's custom reviver function.
+ * @returns {any} The fully processed object.
+ */
+const applyReviverIteratively = (parsed, userReviver) => {
+  const rootHolder = { "": parsed };
+  const stack = [{ parent: rootHolder, key: "", visited: false }];
+
+  while (stack.length > 0) {
+    const node = stack[stack.length - 1];
+
+    if (!node.visited) {
+      node.visited = true;
+
+      const value = node.parent[node.key];
+      const isComplexObject = value !== null && typeof value === "object";
+
+      if (isComplexObject) {
+        const keys = Object.keys(value);
+
+        for (let i = keys.length - 1; i >= 0; i--) {
+          stack.push({ parent: value, key: keys[i], visited: false });
+        }
+      }
+    } else {
+      const { parent, key } = node;
+      let value = parent[key];
+
+      if (typeof value === "string") {
+        const isCustomFormatBigInt = customFormat.test(value);
+
+        if (isCustomFormatBigInt) {
+          value = BigInt(value.slice(0, -1));
+        } else {
+          const isNoise = noiseValue.test(value);
+
+          if (isNoise) value = value.slice(0, -1);
+        }
+      }
+
+      const isDeleted = value === undefined;
+
+      if (isDeleted) {
+        delete parent[key];
+      } else {
+        parent[key] = value;
+      }
+
+      stack.pop();
+    }
+  }
+
+  return rootHolder[""];
+};
+
+/**
+ * Pre-processes the JSON string to mark large numbers with an 'n' suffix.
+ *
+ * @param {string} text The raw JSON string.
+ * @returns {string} The serialized string with marked BigInts.
+ */
+const serializeBigInts = (text) => {
+  return text.replace(
+    stringsOrLargeNumbers,
+    (match, digits, fractional, exponential) => {
+      const isString = match[0] === '"';
+      const isNoise = isString && noiseValueWithQuotes.test(match);
+
+      if (isNoise) return match.substring(0, match.length - 1) + 'n"'; // Mark noise values with additional "n" to offset the deletion of one "n" during the processing
+
+      const hasFractionalOrExponential = fractional || exponential;
+
+      // With a fixed number of digits, we can correctly use lexicographical comparison to do a numeric comparison
+      const isLessThanMaxSafeInt =
+        digits &&
+        (digits.length < MAX_DIGITS ||
+          (digits.length === MAX_DIGITS && digits <= MAX_INT));
+
+      const isStandardValue =
+        isString || hasFractionalOrExponential || isLessThanMaxSafeInt;
+
+      if (isStandardValue) return match;
+
+      return '"' + match + 'n"';
+    },
+  );
+};
 
 /**
  * Converts a JSON string into a JavaScript value.
@@ -57526,42 +58495,34 @@ const noiseValueWithQuotes = /^"-?\d+n+"$/; // Noise - strings that match the cu
  *
  * @param {string} text A valid JSON string.
  * @param {Reviver} [reviver]
- *   A function that transforms the results. This function is called for each member
- *   of the object. If a member contains nested objects, the nested objects are
- *   transformed before the parent object is.
+ * A function that transforms the results. This function is called for each member
+ * of the object. If a member contains nested objects, the nested objects are
+ * transformed before the parent object is.
  * @returns {any} The parsed JavaScript value.
  * @throws {SyntaxError} If text is not valid JSON.
  */
 const JSONParse = (text, reviver) => {
   if (!text) return originalParse(text, reviver);
 
-  if (isContextSourceSupported()) return JSONParseV2(text); // Shortcut to a faster (2x) and simpler version
+  try {
+    if (isContextSourceSupported()) return JSONParseV2(text, reviver); // Shortcut to a faster (2x) and simpler version
 
-  // Find and mark big numbers with "n"
-  const serializedData = text.replace(
-    stringsOrLargeNumbers,
-    (text, digits, fractional, exponential) => {
-      const isString = text[0] === '"';
-      const isNoise = isString && noiseValueWithQuotes.test(text);
+    // Find and mark big numbers with "n"
+    const serializedData = serializeBigInts(text);
 
-      if (isNoise) return text.substring(0, text.length - 1) + 'n"'; // Mark noise values with additional "n" to offset the deletion of one "n" during the processing
+    return originalParse(serializedData, (key, value, context) =>
+      convertMarkedBigIntsReviver(key, value, context, reviver),
+    );
+  } catch (error) {
+    if (error instanceof RangeError) {
+      const serializedData = serializeBigInts(text);
+      const parsed = originalParse(serializedData);
 
-      const isFractionalOrExponential = fractional || exponential;
-      const isLessThanMaxSafeInt =
-        digits &&
-        (digits.length < MAX_DIGITS ||
-          (digits.length === MAX_DIGITS && digits <= MAX_INT)); // With a fixed number of digits, we can correctly use lexicographical comparison to do a numeric comparison
+      return applyReviverIteratively(parsed);
+    }
 
-      if (isString || isFractionalOrExponential || isLessThanMaxSafeInt)
-        return text;
-
-      return '"' + text + 'n"';
-    },
-  );
-
-  return originalParse(serializedData, (key, value, context) =>
-    convertMarkedBigIntsReviver(key, value),
-  );
+    throw error;
+  }
 };
 
 class RequestError extends Error {
@@ -57606,7 +58567,7 @@ class RequestError extends Error {
 // pkg/dist-src/index.js
 
 // pkg/dist-src/version.js
-var VERSION$4 = "10.0.11";
+var VERSION$4 = "10.0.16";
 
 // pkg/dist-src/defaults.js
 var defaults_default = {
@@ -57728,7 +58689,7 @@ async function getResponseData(response) {
   if (!contentType) {
     return response.text().catch(noop$1);
   }
-  const mimetype = distExports.parse(contentType);
+  const mimetype = parse(contentType);
   if (isJSONResponse(mimetype)) {
     let text = "";
     try {
@@ -57737,7 +58698,10 @@ async function getResponseData(response) {
     } catch (err) {
       return text;
     }
-  } else if (mimetype.type.startsWith("text/") || mimetype.parameters.charset?.toLowerCase() === "utf-8") {
+  } else if (mimetype.type.startsWith("text/") || // `application/octet-stream` is the canonical "arbitrary binary" type
+  // (RFC 2046) and must never be decoded as text, even when the response
+  // carries a (misleading) `charset=utf-8` parameter — see #751.
+  mimetype.parameters.charset?.toLowerCase() === "utf-8" && mimetype.type !== "application/octet-stream") {
     return response.text().catch(noop$1);
   } else {
     return response.arrayBuffer().catch(
@@ -57816,6 +58780,9 @@ var GraphqlResponseError = class extends Error {
       Error.captureStackTrace(this, this.constructor);
     }
   }
+  request;
+  headers;
+  response;
   name = "GraphqlResponseError";
   errors;
   data;
@@ -57910,6 +58877,7 @@ function withCustomRequest(customRequest) {
     url: "/graphql"
   });
 }
+/* v8 ignore if -- @preserve */
 
 // pkg/dist-src/is-jwt.js
 var b64url = "(?:[a-zA-Z0-9_-]+)";
@@ -57964,7 +58932,7 @@ var createTokenAuth = function createTokenAuth2(token) {
   });
 };
 
-const VERSION$2 = "7.0.6";
+const VERSION$2 = "7.0.8";
 
 const noop = () => {
 };
