@@ -33986,7 +33986,7 @@ async function listTags() {
             number: tagToNumber(tag.name)
         };
     });
-    listCommits();
+    await listCommits();
     return tags;
 }
 async function listCommits() {
@@ -34010,7 +34010,6 @@ async function listCommits() {
         const changelog = response.data.map((data) => `- [${data.commit.message}](${data.url})`);
         setOutput('changelog', changelog ? changelog.join('\n') : '');
     }
-    return [];
 }
 
 /**
