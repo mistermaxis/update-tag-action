@@ -38,7 +38,7 @@ export async function listCommits(): Promise<Commit[]> {
   //const githubToken = core.getInput('github_token')
   //const octokit = getOctokit(githubToken)
   //const { owner, repo } = context.repo
-  console.log(context.payload.commits.message)
+  console.log(context.payload.commits)
 
   return []
 }
