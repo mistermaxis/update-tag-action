@@ -1,6 +1,6 @@
 import * as core from '@actions/core'
 import { context, getOctokit } from '@actions/github'
-import { Commit, PushPayload, SearchType, VersionTag } from './types.js'
+import { PushPayload, SearchType, VersionTag } from './types.js'
 import { stripVersionNumber, tagToNumber, versionRegex } from './utils.js'
 import { getPrefix, getSuffix } from './utils.js'
 
@@ -34,7 +34,7 @@ export async function listTags(): Promise<VersionTag[]> {
   return tags
 }
 
-export async function listCommits(): Promise<Commit[]> {
+export async function listCommits(): Promise<void> {
   if (context.eventName === 'push') {
     const payload = context.payload as PushPayload
     const commits = payload.commits?.map((commit) => commit.message)
@@ -49,14 +49,12 @@ export async function listCommits(): Promise<Commit[]> {
       owner,
       repo,
       per_page: 10,
-      page: 1,
+      page: 5,
       pull_number: pull_request?.number
     })
     const changelog = response.data.map(
-      (data) => `- [${data.commit.message}](${data.html_url})`
+      (data) => `- [${data.commit.message}](${data.url})`
     )
     core.setOutput('changelog', changelog ? changelog.join('\n') : '')
   }
-
-  return []
 }
