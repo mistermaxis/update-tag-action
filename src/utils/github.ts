@@ -45,6 +45,7 @@ export async function listCommits(): Promise<void> {
     const { owner, repo } = context.repo
 
     const pull_request = context.payload.pull_request!
+
     const response = await octokit.rest.pulls.listCommits({
       owner,
       repo,
@@ -52,6 +53,7 @@ export async function listCommits(): Promise<void> {
       page: 1,
       pull_number: pull_request?.number
     })
+
     const changelog = response.data.map(
       (data) => `- [${data.commit.message}](${data.html_url})`
     )
