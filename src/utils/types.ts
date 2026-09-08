@@ -25,10 +25,7 @@ export type PushPayload = {
 export type PushCommit = {
   id: string
   message: string
-  timestamp?: string
-  added?: string[]
-  modified?: string[]
-  removed?: string[]
+  url: string
 }
 
 export type VersionTag = {
