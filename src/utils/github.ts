@@ -10,7 +10,7 @@ export async function listTags(): Promise<VersionTag[]> {
   const { owner, repo } = context.repo
 
   const response = await octokit.rest.repos.listTags({
-    per_page: 50,
+    per_page: 250,
     page: 1,
     owner,
     repo
@@ -38,12 +38,9 @@ export async function listCommits(): Promise<void> {
   if (context.eventName === 'push') {
     const payload = context.payload as PushPayload
     const commits: string[] | undefined = payload.commits?.map((commit) => {
-      return `- [${commit.message}](${commit.url})`
+      return `- [${commit.message}](${commit.url})${commit.id}`
     })
-    core.setOutput(
-      'changelog',
-      commits ? '### Changelog :gear:\n' + commits.join('\n') : ''
-    )
+    core.setOutput('changelog', commits ? commits.join('\n') : '')
   } else if (context.eventName === 'pull_request') {
     const githubToken = core.getInput('github_token')
     const octokit = getOctokit(githubToken)
@@ -53,7 +50,7 @@ export async function listCommits(): Promise<void> {
     const response = await octokit.rest.pulls.listCommits({
       owner,
       repo,
-      per_page: 50,
+      per_page: 250,
       page: 1,
       pull_number: pull_request?.number
     })
@@ -61,9 +58,6 @@ export async function listCommits(): Promise<void> {
     const changelog = response.data.map(
       (data) => `- [${data.commit.message}](${data.html_url})`
     )
-    core.setOutput(
-      'changelog',
-      changelog ? '### Changelog :gear:\n' + changelog.join('\n') : ''
-    )
+    core.setOutput('changelog', changelog ? changelog.join('\n') : '')
   }
 }
