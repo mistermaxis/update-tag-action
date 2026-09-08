@@ -1,6 +1,6 @@
 import * as core from '@actions/core'
 import { context, getOctokit } from '@actions/github'
-import { Commit, SearchType, VersionTag } from './types.js'
+import { Commit, PushPayload, SearchType, VersionTag } from './types.js'
 import { stripVersionNumber, tagToNumber, versionRegex } from './utils.js'
 import { getPrefix, getSuffix } from './utils.js'
 
@@ -38,7 +38,9 @@ export async function listCommits(): Promise<Commit[]> {
   //const githubToken = core.getInput('github_token')
   //const octokit = getOctokit(githubToken)
   //const { owner, repo } = context.repo
-  console.log(context.payload.commits)
+  if (context.eventName === 'push') {
+    console.log(context.payload as PushPayload[])
+  }
 
   return []
 }
