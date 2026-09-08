@@ -34003,6 +34003,7 @@ async function listCommits() {
     if (context.eventName === 'push') {
         console.log(context.payload);
     }
+    console.log(context.eventName);
     return [];
 }
 
