@@ -57,6 +57,9 @@ export async function listCommits(): Promise<void> {
     const changelog = response.data.map(
       (data) => `- [${data.commit.message}](${data.html_url})`
     )
-    core.setOutput('changelog', changelog ? changelog.join('\n') : '')
+    core.setOutput(
+      'changelog',
+      changelog ? '## Changelog:\n' + changelog.join('\n') : ''
+    )
   }
 }
