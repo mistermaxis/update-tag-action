@@ -34007,7 +34007,7 @@ async function listCommits() {
             page: 1,
             pull_number: pull_request?.number
         });
-        const changelog = commits.data.map((commit) => commit.commit.message);
+        const changelog = commits.data.map((commit) => '- ' + commit.commit.message);
         setOutput('changelog', changelog ? changelog.join('\n') : '');
     }
     return [];
