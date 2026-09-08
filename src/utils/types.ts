@@ -17,8 +17,6 @@ export enum BumpType {
 }
 
 export type PushPayload = {
-  before: string
-  after: string
   commits?: PushCommit[]
 }
 
