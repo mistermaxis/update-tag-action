@@ -53,6 +53,7 @@ export async function run(): Promise<void> {
         break
     }
 
+    core.info(updated_tag.toString())
     // Set outputs for other workflow steps to use
     core.setOutput('updated_tag', updated_tag.fullTag)
   } catch (error) {
