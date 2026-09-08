@@ -1,6 +1,6 @@
 import * as core from '@actions/core'
 import { context, getOctokit } from '@actions/github'
-import { SearchType, VersionTag } from './types.js'
+import { Commit, SearchType, VersionTag } from './types.js'
 import { stripVersionNumber, tagToNumber, versionRegex } from './utils.js'
 import { getPrefix, getSuffix } from './utils.js'
 
@@ -30,6 +30,15 @@ export async function listTags(): Promise<VersionTag[]> {
       number: tagToNumber(tag.name)
     }
   })
-
+  listCommits()
   return tags
+}
+
+export async function listCommits(): Promise<Commit[]> {
+  //const githubToken = core.getInput('github_token')
+  //const octokit = getOctokit(githubToken)
+  //const { owner, repo } = context.repo
+  console.log(context.payload.commits)
+
+  return []
 }
