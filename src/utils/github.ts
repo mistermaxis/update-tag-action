@@ -49,7 +49,7 @@ export async function listCommits(): Promise<void> {
       owner,
       repo,
       per_page: 10,
-      page: 5,
+      page: 2,
       pull_number: pull_request?.number
     })
     const changelog = response.data.map(
