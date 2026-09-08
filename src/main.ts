@@ -1,5 +1,5 @@
 import * as core from '@actions/core'
-import { listTags } from './utils/list_tags.js'
+import { listTags } from './utils/github.js'
 import { searchBase, searchPrerelease } from './utils/search_tags.js'
 import {
   updatePatch,
@@ -57,8 +57,8 @@ export async function run(): Promise<void> {
     core.setOutput('updated_tag', updated_tag.fullTag)
   } catch (error) {
     // Fail the workflow run if an error occurs
-    //if (error instanceof Error) {
-    core.setFailed(`${error}`)
-    //}
+    if (error instanceof Error) {
+      console.error('Error: ', error.stack)
+    }
   }
 }
