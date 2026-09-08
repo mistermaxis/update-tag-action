@@ -38,7 +38,7 @@ export async function listCommits(): Promise<Commit[]> {
   if (context.eventName === 'push') {
     const payload = context.payload as PushPayload
     const commits = payload.commits?.map((commit) => commit.message)
-    core.setOutput('changelog', commits)
+    core.setOutput('changelog', commits ? commits.join('\n') : '')
   } else if (context.eventName === 'pull_request') {
     const githubToken = core.getInput('github_token')
     const octokit = getOctokit(githubToken)
@@ -53,7 +53,7 @@ export async function listCommits(): Promise<Commit[]> {
       pull_number: pull_request?.number
     })
     const changelog = commits.data.map((commit) => commit.commit.message)
-    core.setOutput('changelog', changelog)
+    core.setOutput('changelog', changelog ? changelog.join('\n') : '')
   }
 
   return []
