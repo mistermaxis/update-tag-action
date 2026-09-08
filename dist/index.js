@@ -33995,7 +33995,7 @@ async function listCommits() {
         const commits = payload.commits?.map((commit) => {
             return `- [${commit.message}](${commit.url})`;
         });
-        setOutput('changelog', commits ? '## Changelog:\n' + commits.join('\n') : '');
+        setOutput('changelog', commits ? '### Changelog:\n' + commits.join('\n') : '');
     }
     else if (context.eventName === 'pull_request') {
         const githubToken = getInput('github_token');
@@ -34010,7 +34010,7 @@ async function listCommits() {
             pull_number: pull_request?.number
         });
         const changelog = response.data.map((data) => `- [${data.commit.message}](${data.html_url})`);
-        setOutput('changelog', changelog ? '## Changelog:\n' + changelog.join('\n') : '');
+        setOutput('changelog', changelog ? '### Changelog:\n' + changelog.join('\n') : '');
     }
 }
 
