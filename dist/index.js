@@ -34004,10 +34004,10 @@ async function listCommits() {
             owner,
             repo,
             per_page: 10,
-            page: 1,
+            page: 5,
             pull_number: pull_request?.number
         });
-        const changelog = response.data.map((data) => `- [${data.commit.message}](${data.html_url})`);
+        const changelog = response.data.map((data) => `- [${data.commit.message}](${data.url})`);
         setOutput('changelog', changelog ? changelog.join('\n') : '');
     }
     return [];
