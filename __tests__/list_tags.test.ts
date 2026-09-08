@@ -1,4 +1,4 @@
-import { jest } from '@jest/globals'
+import { jest, describe, it, expect } from '@jest/globals'
 import * as core from '../__fixtures__/core.js'
 import * as github from '../__fixtures__/octokit.js'
 

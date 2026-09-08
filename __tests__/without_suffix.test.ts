@@ -1,4 +1,11 @@
-import { jest } from '@jest/globals'
+import {
+  jest,
+  describe,
+  afterEach,
+  it,
+  expect,
+  beforeEach
+} from '@jest/globals'
 import * as core from '../__fixtures__/core.js'
 import { listTags } from '../__fixtures__/github.js'
 import { VersionTag } from '../src/utils/types.js'
