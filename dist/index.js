@@ -28548,6 +28548,13 @@ function error(message, properties = {}) {
 function warning(message, properties = {}) {
     issueCommand('warning', toCommandProperties(properties), message instanceof Error ? message.toString() : message);
 }
+/**
+ * Writes info to log with console.log.
+ * @param message info message
+ */
+function info(message) {
+    process.stdout.write(message + os.EOL);
+}
 
 class Context {
     /**
@@ -61836,17 +61843,7 @@ async function listTags() {
             number: tagToNumber(tag.name)
         };
     });
-    listCommits();
     return tags;
-}
-async function listCommits() {
-    //const githubToken = core.getInput('github_token')
-    //const octokit = getOctokit(githubToken)
-    const eventName = context.eventName;
-    const payload = context.payload;
-    console.log(eventName);
-    console.log(payload);
-    return [];
 }
 
 /**
@@ -62059,6 +62056,7 @@ async function run() {
                 updated_tag = replace_suffix ? updateNone(latest_tag) : latest_tag;
                 break;
         }
+        info(updated_tag.toString());
         // Set outputs for other workflow steps to use
         setOutput('updated_tag', updated_tag.fullTag);
     }
