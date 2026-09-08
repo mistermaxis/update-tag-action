@@ -16,6 +16,21 @@ export enum BumpType {
   PREMAJOR
 }
 
+export type PushPayload = {
+  before: string
+  after: string
+  commits?: PushCommit[]
+}
+
+export type PushCommit = {
+  id: string
+  message: string
+  timestamp?: string
+  added?: string[]
+  modified?: string[]
+  removed?: string[]
+}
+
 export type VersionTag = {
   fullTag: string
   prefix?: string
