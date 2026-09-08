@@ -41,6 +41,7 @@ export async function listCommits(): Promise<Commit[]> {
   if (context.eventName === 'push') {
     console.log(context.payload as PushPayload)
   }
+  console.log(context.eventName)
 
   return []
 }
