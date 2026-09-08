@@ -33997,13 +33997,26 @@ async function listTags() {
     return tags;
 }
 async function listCommits() {
-    //const githubToken = core.getInput('github_token')
-    //const octokit = getOctokit(githubToken)
-    //const { owner, repo } = context.repo
     if (context.eventName === 'push') {
-        console.log(context.payload);
+        const payload = context.payload;
+        const commits = payload.commits?.map((commit) => commit.message);
+        setOutput('changelog', commits);
     }
-    console.log(context.eventName);
+    else if (context.eventName === 'pull_request') {
+        const githubToken = getInput('github_token');
+        const octokit = getOctokit(githubToken);
+        const { owner, repo } = context.repo;
+        const pull_request = context.payload.pull_request;
+        const commits = await octokit.rest.pulls.listCommits({
+            owner,
+            repo,
+            per_page: 10,
+            page: 1,
+            pull_number: pull_request?.number
+        });
+        const changelog = commits.data.map((commit) => commit.commit.message);
+        setOutput('changelog', changelog);
+    }
     return [];
 }
 
