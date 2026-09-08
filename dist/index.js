@@ -33995,7 +33995,7 @@ async function listCommits() {
         const commits = payload.commits?.map((commit) => {
             return `- [${commit.message}](${commit.url})`;
         });
-        setOutput('changelog', commits ? '## Changelog' + commits.join('\n') : '');
+        setOutput('changelog', commits ? '## Changelog:\n' + commits.join('\n') : '');
     }
     else if (context.eventName === 'pull_request') {
         const githubToken = getInput('github_token');
