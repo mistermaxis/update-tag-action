@@ -2,7 +2,8 @@ export enum SearchType {
   NO_SUFFIX,
   WITH_SUFFIX,
   PRERELEASE,
-  STRIPPED_NUMBER
+  STRIPPED_NUMBER,
+  VALID_TAG
 }
 
 export enum BumpType {
@@ -29,4 +30,9 @@ export type VersionNumber = {
   minor: number
   patch: number
   prerelease?: number
+}
+
+export type Commit = {
+  id: string
+  message: string
 }
