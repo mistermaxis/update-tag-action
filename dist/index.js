@@ -33968,7 +33968,7 @@ async function listTags() {
     const octokit = getOctokit(githubToken);
     const { owner, repo } = context.repo;
     const response = await octokit.rest.repos.listTags({
-        per_page: 50,
+        per_page: 250,
         page: 1,
         owner,
         repo
@@ -33993,9 +33993,9 @@ async function listCommits() {
     if (context.eventName === 'push') {
         const payload = context.payload;
         const commits = payload.commits?.map((commit) => {
-            return `- [${commit.message}](${commit.url})`;
+            return `- [${commit.message}](${commit.url})${commit.id}`;
         });
-        setOutput('changelog', commits ? '### Changelog :gear:\n' + commits.join('\n') : '');
+        setOutput('changelog', commits ? commits.join('\n') : '');
     }
     else if (context.eventName === 'pull_request') {
         const githubToken = getInput('github_token');
@@ -34005,12 +34005,12 @@ async function listCommits() {
         const response = await octokit.rest.pulls.listCommits({
             owner,
             repo,
-            per_page: 50,
+            per_page: 250,
             page: 1,
             pull_number: pull_request?.number
         });
         const changelog = response.data.map((data) => `- [${data.commit.message}](${data.html_url})`);
-        setOutput('changelog', changelog ? '### Changelog :gear:\n' + changelog.join('\n') : '');
+        setOutput('changelog', changelog ? changelog.join('\n') : '');
     }
 }
 
