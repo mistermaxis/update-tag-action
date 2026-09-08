@@ -42,7 +42,7 @@ export async function listCommits(): Promise<void> {
     })
     core.setOutput(
       'changelog',
-      commits ? '## Changelog:\n' + commits.join('\n') : ''
+      commits ? '### Changelog:\n' + commits.join('\n') : ''
     )
   } else if (context.eventName === 'pull_request') {
     const githubToken = core.getInput('github_token')
@@ -63,7 +63,7 @@ export async function listCommits(): Promise<void> {
     )
     core.setOutput(
       'changelog',
-      changelog ? '## Changelog:\n' + changelog.join('\n') : ''
+      changelog ? '### Changelog:\n' + changelog.join('\n') : ''
     )
   }
 }
