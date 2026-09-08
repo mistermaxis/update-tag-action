@@ -1,11 +1,11 @@
 import { jest } from '@jest/globals'
 import * as core from '../__fixtures__/core.js'
-import { listTags } from '../__fixtures__/list_tags.js'
+import { listTags } from '../__fixtures__/github.js'
 import { VersionTag } from '../src/utils/types.js'
 
 // Mocks should be declared before the module being tested is imported.
 jest.unstable_mockModule('@actions/core', () => core)
-jest.unstable_mockModule('../src/utils/list_tags.js', () => ({ listTags }))
+jest.unstable_mockModule('../src/utils/github.js', () => ({ listTags }))
 
 // The module being tested should be imported dynamically. This ensures that the
 // mocks are used in place of any actual dependencies.
