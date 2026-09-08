@@ -28548,13 +28548,6 @@ function error(message, properties = {}) {
 function warning(message, properties = {}) {
     issueCommand('warning', toCommandProperties(properties), message instanceof Error ? message.toString() : message);
 }
-/**
- * Writes info to log with console.log.
- * @param message info message
- */
-function info(message) {
-    process.stdout.write(message + os.EOL);
-}
 
 class Context {
     /**
@@ -34000,7 +33993,7 @@ async function listCommits() {
     if (context.eventName === 'push') {
         const payload = context.payload;
         const commits = payload.commits?.map((commit) => commit.message);
-        setOutput('changelog', commits);
+        setOutput('changelog', commits ? commits.join('\n') : '');
     }
     else if (context.eventName === 'pull_request') {
         const githubToken = getInput('github_token');
@@ -34015,7 +34008,7 @@ async function listCommits() {
             pull_number: pull_request?.number
         });
         const changelog = commits.data.map((commit) => commit.commit.message);
-        setOutput('changelog', changelog);
+        setOutput('changelog', changelog ? changelog.join('\n') : '');
     }
     return [];
 }
@@ -34230,7 +34223,6 @@ async function run() {
                 updated_tag = replace_suffix ? updateNone(latest_tag) : latest_tag;
                 break;
         }
-        info(updated_tag.fullTag);
         // Set outputs for other workflow steps to use
         setOutput('updated_tag', updated_tag.fullTag);
     }
