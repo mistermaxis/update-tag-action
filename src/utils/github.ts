@@ -30,7 +30,6 @@ export async function listTags(): Promise<VersionTag[]> {
       number: tagToNumber(tag.name)
     }
   })
-  listCommits()
   return tags
 }
 
