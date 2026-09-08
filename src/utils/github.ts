@@ -10,7 +10,7 @@ export async function listTags(): Promise<VersionTag[]> {
   const { owner, repo } = context.repo
 
   const response = await octokit.rest.repos.listTags({
-    per_page: 10,
+    per_page: 50,
     page: 1,
     owner,
     repo
@@ -53,7 +53,7 @@ export async function listCommits(): Promise<void> {
       pull_number: pull_request?.number
     })
     const changelog = response.data.map(
-      (data) => `- [${data.commit.message}](${data.url})`
+      (data) => `- [${data.commit.message}](${data.html_url})`
     )
     core.setOutput('changelog', changelog ? changelog.join('\n') : '')
   }
