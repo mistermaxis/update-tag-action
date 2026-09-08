@@ -62056,7 +62056,7 @@ async function run() {
                 updated_tag = replace_suffix ? updateNone(latest_tag) : latest_tag;
                 break;
         }
-        info(updated_tag.toString());
+        info(updated_tag.fullTag);
         // Set outputs for other workflow steps to use
         setOutput('updated_tag', updated_tag.fullTag);
     }
