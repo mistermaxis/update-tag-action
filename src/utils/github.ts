@@ -48,8 +48,8 @@ export async function listCommits(): Promise<void> {
     const response = await octokit.rest.pulls.listCommits({
       owner,
       repo,
-      per_page: 10,
-      page: 2,
+      per_page: 50,
+      page: 1,
       pull_number: pull_request?.number
     })
     const changelog = response.data.map(
