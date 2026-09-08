@@ -34000,7 +34000,9 @@ async function listCommits() {
     //const githubToken = core.getInput('github_token')
     //const octokit = getOctokit(githubToken)
     //const { owner, repo } = context.repo
-    console.log(context.payload.commits);
+    if (context.eventName === 'push') {
+        console.log(context.payload);
+    }
     return [];
 }
 
