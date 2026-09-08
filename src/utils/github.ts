@@ -39,7 +39,7 @@ export async function listCommits(): Promise<Commit[]> {
   //const octokit = getOctokit(githubToken)
   //const { owner, repo } = context.repo
   if (context.eventName === 'push') {
-    console.log(context.payload as PushPayload[])
+    console.log(context.payload as PushPayload)
   }
 
   return []
