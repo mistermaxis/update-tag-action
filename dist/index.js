@@ -33992,8 +33992,10 @@ async function listTags() {
 async function listCommits() {
     if (context.eventName === 'push') {
         const payload = context.payload;
-        const commits = payload.commits?.map((commit) => commit.message);
-        setOutput('changelog', commits ? commits.join('\n') : '');
+        const commits = payload.commits?.map((commit) => {
+            return `- [${commit.message}](${commit.url})`;
+        });
+        setOutput('changelog', commits ? '## Changelog' + commits.join('\n') : '');
     }
     else if (context.eventName === 'pull_request') {
         const githubToken = getInput('github_token');
