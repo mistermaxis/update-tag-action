@@ -35,13 +35,26 @@ export async function listTags(): Promise<VersionTag[]> {
 }
 
 export async function listCommits(): Promise<Commit[]> {
-  //const githubToken = core.getInput('github_token')
-  //const octokit = getOctokit(githubToken)
-  //const { owner, repo } = context.repo
   if (context.eventName === 'push') {
-    console.log(context.payload as PushPayload)
+    const payload = context.payload as PushPayload
+    const commits = payload.commits?.map((commit) => commit.message)
+    core.setOutput('changelog', commits)
+  } else if (context.eventName === 'pull_request') {
+    const githubToken = core.getInput('github_token')
+    const octokit = getOctokit(githubToken)
+    const { owner, repo } = context.repo
+
+    const pull_request = context.payload.pull_request!
+    const commits = await octokit.rest.pulls.listCommits({
+      owner,
+      repo,
+      per_page: 10,
+      page: 1,
+      pull_number: pull_request?.number
+    })
+    const changelog = commits.data.map((commit) => commit.commit.message)
+    core.setOutput('changelog', changelog)
   }
-  console.log(context.eventName)
 
   return []
 }
