@@ -34000,14 +34000,14 @@ async function listCommits() {
         const octokit = getOctokit(githubToken);
         const { owner, repo } = context.repo;
         const pull_request = context.payload.pull_request;
-        const commits = await octokit.rest.pulls.listCommits({
+        const response = await octokit.rest.pulls.listCommits({
             owner,
             repo,
             per_page: 10,
             page: 1,
             pull_number: pull_request?.number
         });
-        const changelog = commits.data.map((commit) => '- ' + commit.commit.message);
+        const changelog = response.data.map((data) => `- [${data.commit.message}](${data.commit.url})`);
         setOutput('changelog', changelog ? changelog.join('\n') : '');
     }
     return [];
