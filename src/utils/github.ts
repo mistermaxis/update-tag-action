@@ -37,15 +37,19 @@ export async function listTags(): Promise<VersionTag[]> {
 export async function listCommits(): Promise<void> {
   if (context.eventName === 'push') {
     const payload = context.payload as PushPayload
-    const commits = payload.commits?.map((commit) => commit.message)
-    core.setOutput('changelog', commits ? commits.join('\n') : '')
+    const commits: string[] | undefined = payload.commits?.map((commit) => {
+      return `- [${commit.message}](${commit.url})`
+    })
+    core.setOutput(
+      'changelog',
+      commits ? '## Changelog' + commits.join('\n') : ''
+    )
   } else if (context.eventName === 'pull_request') {
     const githubToken = core.getInput('github_token')
     const octokit = getOctokit(githubToken)
     const { owner, repo } = context.repo
 
     const pull_request = context.payload.pull_request!
-
     const response = await octokit.rest.pulls.listCommits({
       owner,
       repo,
