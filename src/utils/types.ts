@@ -21,7 +21,7 @@ export type PushPayload = {
 }
 
 export type Commit = {
-  sha: string
+  id: string
   message: string
   url: string
   timestamp: string
