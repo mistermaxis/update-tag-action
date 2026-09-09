@@ -33993,8 +33993,18 @@ async function listCommits() {
     if (context.eventName === 'push') {
         const payload = context.payload;
         const commits = payload.commits?.map((commit) => {
-            return `- [${commit.message}](${commit.url})${commit.id}`;
+            return `- [${commit.message}](${commit.url})`;
         });
+        const commitArray = payload.commits?.map((commit) => ({
+            sha: commit.sha,
+            message: commit.message,
+            url: commit.url,
+            timestamp: commit.timestamp,
+            author: {
+                name: commit.author.name
+            }
+        }));
+        setOutput('commits', commitArray ? JSON.stringify(commitArray) : '');
         setOutput('changelog', commits ? commits.join('\n') : '');
     }
     else if (context.eventName === 'pull_request') {
@@ -34009,7 +34019,17 @@ async function listCommits() {
             page: 1,
             pull_number: pull_request?.number
         });
-        const changelog = response.data.map((data) => `- [${data.commit.message}](${data.html_url})`);
+        const changelog = response.data.map((data) => `- ${data.commit.message} ${data.node_id}`);
+        const commitArray = response.data.map((data) => ({
+            sha: data.sha,
+            message: data.commit.message,
+            url: data.html_url,
+            timestamp: data.commit.author?.date ?? '',
+            author: {
+                name: data.commit.author?.name ?? ''
+            }
+        }));
+        setOutput('commits', commitArray ? JSON.stringify(commitArray) : '');
         setOutput('changelog', changelog ? changelog.join('\n') : '');
     }
 }
