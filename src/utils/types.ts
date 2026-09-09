@@ -17,13 +17,19 @@ export enum BumpType {
 }
 
 export type PushPayload = {
-  commits?: PushCommit[]
+  commits?: Commit[]
 }
 
-export type PushCommit = {
-  id: string
+export type Commit = {
+  sha: string
   message: string
   url: string
+  timestamp: string
+  author: Author
+}
+
+export type Author = {
+  name: string
 }
 
 export type VersionTag = {
@@ -40,9 +46,4 @@ export type VersionNumber = {
   minor: number
   patch: number
   prerelease?: number
-}
-
-export type Commit = {
-  id: string
-  message: string
 }
