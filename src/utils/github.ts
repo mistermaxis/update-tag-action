@@ -30,7 +30,6 @@ export async function listTags(): Promise<VersionTag[]> {
       number: tagToNumber(tag.name)
     }
   })
-  await listCommits()
   return tags
 }
 
@@ -38,7 +37,7 @@ export async function listCommits(): Promise<void> {
   if (context.eventName === 'push') {
     const payload = context.payload as PushPayload
     const commits: string[] | undefined = payload.commits?.map((commit) => {
-      return `- ${commit.message} ${commit.id} _by ${commit.author.name}_`
+      return `- ${commit.message} - ${commit.id}`
     })
 
     const commitArray: Commit[] | undefined = payload.commits?.map(
@@ -70,8 +69,7 @@ export async function listCommits(): Promise<void> {
     })
 
     const changelog: string[] = response.data.map(
-      (data) =>
-        `- ${data.commit.message} ${data.sha} _by ${data.commit.author?.name ?? 'Unknown'}_`
+      (data) => `- ${data.commit.message} - ${data.sha}`
     )
 
     const commitArray: Commit[] = response.data.map((data) => ({
