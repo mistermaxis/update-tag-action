@@ -33993,7 +33993,7 @@ async function listCommits() {
     if (context.eventName === 'push') {
         const payload = context.payload;
         const commits = payload.commits?.map((commit) => {
-            return `- [${commit.message}](${commit.url})`;
+            return `- ${commit.message} ${commit.sha} _by ${commit.author.name}_`;
         });
         const commitArray = payload.commits?.map((commit) => ({
             sha: commit.sha,
@@ -34019,7 +34019,7 @@ async function listCommits() {
             page: 1,
             pull_number: pull_request?.number
         });
-        const changelog = response.data.map((data) => `- ${data.commit.message} ${data.node_id}`);
+        const changelog = response.data.map((data) => `- ${data.commit.message} ${data.sha} _by ${data.commit.author?.name ?? 'Unknown'}_`);
         const commitArray = response.data.map((data) => ({
             sha: data.sha,
             message: data.commit.message,
