@@ -38,7 +38,7 @@ export async function listCommits(): Promise<void> {
   if (context.eventName === 'push') {
     const payload = context.payload as PushPayload
     const commits: string[] | undefined = payload.commits?.map((commit) => {
-      return `- [${commit.message}](${commit.url})`
+      return `- ${commit.message} ${commit.sha} _by ${commit.author.name}_`
     })
 
     const commitArray: Commit[] | undefined = payload.commits?.map(
@@ -69,8 +69,9 @@ export async function listCommits(): Promise<void> {
       pull_number: pull_request?.number
     })
 
-    const changelog = response.data.map(
-      (data) => `- ${data.commit.message} ${data.node_id}`
+    const changelog: string[] = response.data.map(
+      (data) =>
+        `- ${data.commit.message} ${data.sha} _by ${data.commit.author?.name ?? 'Unknown'}_`
     )
 
     const commitArray: Commit[] = response.data.map((data) => ({
