@@ -54,7 +54,10 @@ outputs:
     description: The update tag version created from the parameters passed
   changelog:
     description:
-      The list of commit messages attached to the push or pull request event
+      The list of commit messages attached to the push or pull request event formatted as a list
+  commits:
+    description:
+      The list of commits associated with the push or pull request as an array of json objects
 
 runs:
   using: node24
