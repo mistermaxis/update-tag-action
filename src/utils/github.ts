@@ -1,6 +1,6 @@
 import * as core from '@actions/core'
 import { context, getOctokit } from '@actions/github'
-import { PushPayload, SearchType, VersionTag } from './types.js'
+import { Commit, PushPayload, SearchType, VersionTag } from './types.js'
 import { stripVersionNumber, tagToNumber, versionRegex } from './utils.js'
 import { getPrefix, getSuffix } from './utils.js'
 
@@ -38,8 +38,22 @@ export async function listCommits(): Promise<void> {
   if (context.eventName === 'push') {
     const payload = context.payload as PushPayload
     const commits: string[] | undefined = payload.commits?.map((commit) => {
-      return `- [${commit.message}](${commit.url})${commit.id}`
+      return `- [${commit.message}](${commit.url})`
     })
+
+    const commitArray: Commit[] | undefined = payload.commits?.map(
+      (commit) => ({
+        sha: commit.sha,
+        message: commit.message,
+        url: commit.url,
+        timestamp: commit.timestamp,
+        author: {
+          name: commit.author.name
+        }
+      })
+    )
+
+    core.setOutput('commits', commitArray ? JSON.stringify(commitArray) : '')
     core.setOutput('changelog', commits ? commits.join('\n') : '')
   } else if (context.eventName === 'pull_request') {
     const githubToken = core.getInput('github_token')
@@ -56,8 +70,20 @@ export async function listCommits(): Promise<void> {
     })
 
     const changelog = response.data.map(
-      (data) => `- [${data.commit.message}](${data.html_url})`
+      (data) => `- ${data.commit.message} ${data.node_id}`
     )
+
+    const commitArray: Commit[] = response.data.map((data) => ({
+      sha: data.sha,
+      message: data.commit.message,
+      url: data.html_url,
+      timestamp: data.commit.author?.date ?? '',
+      author: {
+        name: data.commit.author?.name ?? ''
+      }
+    }))
+
+    core.setOutput('commits', commitArray ? JSON.stringify(commitArray) : '')
     core.setOutput('changelog', changelog ? changelog.join('\n') : '')
   }
 }
