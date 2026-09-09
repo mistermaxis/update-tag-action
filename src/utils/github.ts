@@ -33,7 +33,7 @@ export async function listTags(): Promise<VersionTag[]> {
   return tags
 }
 
-export async function listCommits(): Promise<void> {
+export async function outputCommits(): Promise<void> {
   if (context.eventName === 'push') {
     const payload = context.payload as PushPayload
     const commits: string[] | undefined = payload.commits?.map((commit) => {
