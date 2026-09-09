@@ -33986,52 +33986,7 @@ async function listTags() {
             number: tagToNumber(tag.name)
         };
     });
-    await listCommits();
     return tags;
-}
-async function listCommits() {
-    if (context.eventName === 'push') {
-        const payload = context.payload;
-        const commits = payload.commits?.map((commit) => {
-            return `- ${commit.message} ${commit.id} _by ${commit.author.name}_`;
-        });
-        const commitArray = payload.commits?.map((commit) => ({
-            id: commit.id,
-            message: commit.message,
-            url: commit.url,
-            timestamp: commit.timestamp,
-            author: {
-                name: commit.author.name
-            }
-        }));
-        setOutput('commits', commitArray ? JSON.stringify(commitArray) : '');
-        setOutput('changelog', commits ? commits.join('\n') : '');
-    }
-    else if (context.eventName === 'pull_request') {
-        const githubToken = getInput('github_token');
-        const octokit = getOctokit(githubToken);
-        const { owner, repo } = context.repo;
-        const pull_request = context.payload.pull_request;
-        const response = await octokit.rest.pulls.listCommits({
-            owner,
-            repo,
-            per_page: 250,
-            page: 1,
-            pull_number: pull_request?.number
-        });
-        const changelog = response.data.map((data) => `- ${data.commit.message} ${data.sha} _by ${data.commit.author?.name ?? 'Unknown'}_`);
-        const commitArray = response.data.map((data) => ({
-            id: data.sha,
-            message: data.commit.message,
-            url: data.html_url,
-            timestamp: data.commit.author?.date ?? '',
-            author: {
-                name: data.commit.author?.name ?? ''
-            }
-        }));
-        setOutput('commits', commitArray ? JSON.stringify(commitArray) : '');
-        setOutput('changelog', changelog ? changelog.join('\n') : '');
-    }
 }
 
 /**
