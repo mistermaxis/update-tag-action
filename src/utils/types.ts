@@ -23,13 +23,6 @@ export type PushPayload = {
 export type Commit = {
   id: string
   message: string
-  url: string
-  timestamp: string
-  author: Author
-}
-
-export type Author = {
-  name: string
 }
 
 export type VersionTag = {
