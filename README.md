@@ -26,8 +26,8 @@
 > `updated_tag`: The newly composed tag (this action doesn't create the tag
 > itself. It just creates the formatted tag string and provides it as an output)
 >
-> `changelog`: The list of commit messages attached to the push or pull request event
-> formatted as a list
+> `changelog`: The list of commit messages attached to the push or pull request
+> event formatted as a list
 
 ## Example
 
