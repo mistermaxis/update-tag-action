@@ -34244,7 +34244,7 @@ async function run() {
                 break;
         }
         // Set outputs for other workflow steps to use
-        outputCommits();
+        await outputCommits();
         setOutput('updated_tag', updated_tag.fullTag);
     }
     catch (error) {
