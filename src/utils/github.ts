@@ -1,6 +1,6 @@
 import * as core from '@actions/core'
 import { context, getOctokit } from '@actions/github'
-import { Commit, PushPayload, SearchType, VersionTag } from './types.js'
+import { PushPayload, SearchType, VersionTag } from './types.js'
 import { stripVersionNumber, tagToNumber, versionRegex } from './utils.js'
 import { getPrefix, getSuffix } from './utils.js'
 
@@ -8,7 +8,6 @@ export async function listTags(): Promise<VersionTag[]> {
   const githubToken = core.getInput('github_token')
   const octokit = getOctokit(githubToken)
   const { owner, repo } = context.repo
-
   const response = await octokit.rest.repos.listTags({
     per_page: 250,
     page: 1,
@@ -40,20 +39,7 @@ export async function outputCommits(): Promise<void> {
       return `- ${commit.message} - ${commit.id}`
     })
 
-    const commitArray: Commit[] | undefined = payload.commits?.map(
-      (commit) => ({
-        id: commit.id,
-        message: commit.message,
-        url: commit.url,
-        timestamp: commit.timestamp,
-        author: {
-          name: commit.author.name
-        }
-      })
-    )
-
-    core.setOutput('commits', commitArray ? JSON.stringify(commitArray) : '')
-    core.setOutput('changelog', commits ? commits.join('\n') : '')
+    core.setOutput('changelog', commits?.length ? commits.join('\n') : '')
   } else if (context.eventName === 'pull_request') {
     const githubToken = core.getInput('github_token')
     const octokit = getOctokit(githubToken)
@@ -72,17 +58,6 @@ export async function outputCommits(): Promise<void> {
       (data) => `- ${data.commit.message} - ${data.sha}`
     )
 
-    const commitArray: Commit[] = response.data.map((data) => ({
-      id: data.sha,
-      message: data.commit.message,
-      url: data.html_url,
-      timestamp: data.commit.author?.date ?? '',
-      author: {
-        name: data.commit.author?.name ?? ''
-      }
-    }))
-
-    core.setOutput('commits', commitArray ? JSON.stringify(commitArray) : '')
-    core.setOutput('changelog', changelog ? changelog.join('\n') : '')
+    core.setOutput('changelog', changelog.length ? changelog.join('\n') : '')
   }
 }
