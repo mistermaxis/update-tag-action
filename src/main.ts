@@ -54,7 +54,7 @@ export async function run(): Promise<void> {
     }
 
     // Set outputs for other workflow steps to use
-    outputCommits()
+    await outputCommits()
     core.setOutput('updated_tag', updated_tag.fullTag)
   } catch (error: unknown) {
     // Fail the workflow run if an error occurs
