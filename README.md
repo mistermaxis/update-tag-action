@@ -54,7 +54,7 @@ jobs:
           name: Release ${{ steps.release_tag.outputs.updated_tag }}
           body: |
           ### Changelog:
-          ${{ steps.update-tag.outputs.changelog }}
+          ${{ steps.release-tag.outputs.changelog }}
 ```
 
 [Examples Without Suffix](EXAMPLES_NO_SUFFIX.md)
