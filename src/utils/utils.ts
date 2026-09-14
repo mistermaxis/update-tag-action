@@ -49,6 +49,7 @@ export function versionRegex(searchType: SearchType): RegExp {
   const pattern_suffix: string = `^${getPrefix()}${version_number}${suffix}$`
   const pattern_base: string = `^${getPrefix()}${version_number}$`
   const pattern_stripped: string = `${version_number}`
+  const patter_valid: string = `^v([\\d]+[.]){2}[\\d]+([-][a-zA-z]+([.][\\d]+)?)?$`
 
   switch (searchType) {
     case SearchType.WITH_SUFFIX:
@@ -57,6 +58,8 @@ export function versionRegex(searchType: SearchType): RegExp {
       return new RegExp(pattern_prerelease)
     case SearchType.STRIPPED_NUMBER:
       return new RegExp(pattern_stripped)
+    case SearchType.VALID_TAG:
+      return new RegExp(patter_valid)
     case SearchType.NO_SUFFIX:
     default:
       return new RegExp(pattern_base)

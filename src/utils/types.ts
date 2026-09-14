@@ -2,7 +2,8 @@ export enum SearchType {
   NO_SUFFIX,
   WITH_SUFFIX,
   PRERELEASE,
-  STRIPPED_NUMBER
+  STRIPPED_NUMBER,
+  VALID_TAG
 }
 
 export enum BumpType {
@@ -13,6 +14,15 @@ export enum BumpType {
   PREPATCH,
   PREMINOR,
   PREMAJOR
+}
+
+export type PushPayload = {
+  commits?: Commit[]
+}
+
+export type Commit = {
+  id: string
+  message: string
 }
 
 export type VersionTag = {

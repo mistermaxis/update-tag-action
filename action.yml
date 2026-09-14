@@ -52,7 +52,10 @@ inputs:
 outputs:
   updated_tag:
     description: The update tag version created from the parameters passed
-
+  changelog:
+    description:
+      The list of commit messages attached to the push or pull request event
+      formatted as a list
 runs:
   using: node24
   main: dist/index.js
