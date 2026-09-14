@@ -25,6 +25,9 @@
 
 > `updated_tag`: The newly composed tag (this action doesn't create the tag
 > itself. It just creates the formatted tag string and provides it as an output)
+>
+> `changelog`: The list of commit messages attached to the push or pull request event
+> formatted as a list
 
 ## Example
 
@@ -49,6 +52,9 @@ jobs:
         with:
           tag: ${{ steps.release_tag.outputs.updated_tag }}
           name: Release ${{ steps.release_tag.outputs.updated_tag }}
+          body: |
+          ### Changelog:
+          ${{ steps.update-tag.outputs.changelog }}
 ```
 
 [Examples Without Suffix](EXAMPLES_NO_SUFFIX.md)
