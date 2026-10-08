@@ -47,7 +47,7 @@
     "@actions/core": "^3.0.0"
   },
   "devDependencies": {
-    "@octokit/openapi-webhooks-types": "12.1.0",
+    "@octokit/openapi-webhooks-types": "^12.2.0",
     "@actions/github": "^9.1.1",
     "@actions/http-client": "^4.0.1",
     "@eslint/compat": "^2.1.1",
@@ -75,5 +75,10 @@
   },
   "optionalDependencies": {
     "@rollup/rollup-linux-x64-gnu": "*"
+  },
+  "allowScripts": {
+    "esbuild@0.28.2": true,
+    "unrs-resolver@1.12.2": true,
+    "@parcel/watcher@2.6.0": true
   }
 }
