@@ -59,7 +59,7 @@
     "@rollup/plugin-node-resolve": "^16.0.1",
     "@rollup/plugin-typescript": "^12.1.4",
     "@types/jest": "^30.0.0",
-    "@types/node": "^26.6.2",
+    "@types/node": "^26.6.5",
     "@typescript-eslint/eslint-plugin": "^8.70.1",
     "eslint": "^10.11.0",
     "eslint-config-prettier": "^10.1.8",
@@ -68,7 +68,7 @@
     "jest": "^30.5.2",
     "make-coverage-badge": "^1.2.0",
     "prettier": "^3.9.9",
-    "rollup": "^4.63.5",
+    "rollup": "^4.64.3",
     "ts-jest": "^29.4.13",
     "ts-jest-resolver": "^2.0.1",
     "typescript": "^6.0.3"
